@@ -36,11 +36,13 @@ textarea:focus {
 
 #test-results,
 pre {
+  font-size: 24px;
   background-color: #272827;
+  margin: 0;
   color: #eee;
   padding: 10px;
   overflow: auto;
-  min-height: 20px;
+  min-height: 30px;
 }
 
 .test-result {
