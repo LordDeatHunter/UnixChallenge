@@ -67,13 +67,13 @@ def judge(chal_dir, submission_cmd):
     for solution_file in solution_files:
         # Extract test number from solution_N.out
         test_num = solution_file.stem.split('_')[1]
-        setup_path = chal / f"setup_{test_num}.sh"
+        setup_path = test_dir / f"setup_{test_num}.sh"
 
         # Run setup for this specific test case
         if setup_path.exists():
             rc, out, err, ms = docker_run(
                 [(chal, "/challenge", True), (work, "/work", False)],
-                f"cd /work && chmod +x /challenge/setup_{test_num}.sh 2>/dev/null || true && /challenge/setup_{test_num}.sh || true",
+                f"cd /work && chmod +x /challenge/tests/public/setup_{test_num}.sh 2>/dev/null || true && /challenge/tests/public/setup_{test_num}.sh || true",
                 timeout_s=10
             )
             (work/f"setup_{test_num}.log").write_bytes(out + err)
