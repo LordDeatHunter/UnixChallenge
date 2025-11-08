@@ -53,7 +53,7 @@ async function run() {
   });
   const data = await res.json();
   document.getElementById("result").textContent =
-    JSON.stringify(data.summary || data, null, 2);
+    JSON.stringify(data.summary || data, null, 2).replaceAll('\\n', '\n');
   document.getElementById("stdout").textContent = data.stdout || "";
   document.getElementById("stderr").textContent = data.stderr || "";
 }

@@ -55,53 +55,70 @@ def judge(chal_dir, submission_cmd):
     work = pathlib.Path("artifacts")/run_id
     work.mkdir(parents=True, exist_ok=True)
 
-    # setup (best-effort)
-    rc, out, err, ms = docker_run(
-        [(chal, "/challenge", True), (work, "/work", False)],
-        "cd /work && chmod +x /challenge/setup.sh 2>/dev/null || true && /challenge/setup.sh || true",
-        timeout_s=10
-    )
-    (work/"setup.log").write_bytes(out + err)
+    test_dir = chal / "tests" / "public"
+    solution_files = sorted(test_dir.glob("solution_*.out"))
 
-    # build test command
-    in_path = chal/"tests/public/001.in"
-    exp_path = chal/"tests/public/001.out"
-    run = "cd /work && set -euo pipefail; set -o pipefail; "
-    if in_path.exists():
-        # run += "cat /challenge/tests/public/001.in | (" + submission_cmd + ") > /work/stdout.txt"
-        run += f"({submission_cmd}) < /challenge/tests/public/001.in > /work/stdout.txt"
-    else:
-        # run += "(" + submission_cmd + ") > /work/stdout.txt"
-        run += f"({submission_cmd}) > /work/stdout.txt"
+    if not solution_files:
+        print(json.dumps({"error": "No solution files found (solution_*.out)"}))
+        return
 
-    rc, out, err, ms = docker_run(
-        [(chal, "/challenge", True), (work, "/work", False)],
-        run,
-        timeout_s=3
-    )
+    all_results = []
 
-    (work/"run.stderr").write_bytes(err)
-    (work/"run.stdout").write_bytes(out)
+    for solution_file in solution_files:
+        # Extract test number from solution_N.out
+        test_num = solution_file.stem.split('_')[1]
+        setup_path = chal / f"setup_{test_num}.sh"
 
-    actual_path = work/"stdout.txt"
-    # read actual and strip spaces at start and end
-    actual = actual_path.read_bytes() if actual_path.exists() else b""
-    actual = actual.decode(errors='replace')
-    actual = strip_lines(actual, " ")
+        # Run setup for this specific test case
+        if setup_path.exists():
+            rc, out, err, ms = docker_run(
+                [(chal, "/challenge", True), (work, "/work", False)],
+                f"cd /work && chmod +x /challenge/setup_{test_num}.sh 2>/dev/null || true && /challenge/setup_{test_num}.sh || true",
+                timeout_s=10
+            )
+            (work/f"setup_{test_num}.log").write_bytes(out + err)
 
-    expected = exp_path.read_bytes()
-    expected = expected.decode(errors='replace')
-    expected = strip_lines(expected, " ")
+        # Build and run test command
+        run = "cd /work && set -euo pipefail; set -o pipefail; "
+        run += f"({submission_cmd}) > /work/stdout_{test_num}.txt"
 
-    passed = (rc == 0 and actual == expected)
+        rc, out, err, ms = docker_run(
+            [(chal, "/challenge", True), (work, "/work", False)],
+            run,
+            timeout_s=3
+        )
+
+        (work/f"run_{test_num}.stderr").write_bytes(err)
+        (work/f"run_{test_num}.stdout").write_bytes(out)
+
+        actual_path = work/f"stdout_{test_num}.txt"
+        actual = actual_path.read_bytes() if actual_path.exists() else b""
+        actual = actual.decode(errors='replace')
+        actual = strip_lines(actual, " ")
+
+        expected = solution_file.read_bytes()
+        expected = expected.decode(errors='replace')
+        expected = strip_lines(expected, " ")
+
+        passed = (rc == 0 and actual == expected)
+
+        test_result = {
+            "test_num": test_num,
+            "exit_code": rc,
+            "elapsed_ms": ms,
+            "pass": bool(passed),
+            "stdout": actual,
+            "expected": expected
+        }
+        all_results.append(test_result)
 
     summary = {
         "run_id": run_id,
-        "exit_code": rc,
-        "elapsed_ms": ms,
-        "pass": bool(passed),
-        "stdout": actual,
-        "expected": expected
+        "total_tests": len(all_results),
+        "passed": sum(1 for r in all_results if r["pass"]),
+        "failed": sum(1 for r in all_results if not r["pass"]),
+        "all_pass": all(r["pass"] for r in all_results),
+        "results": all_results
     }
     (work/"summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
