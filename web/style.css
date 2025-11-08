@@ -25,6 +25,9 @@ textarea {
   background-color: #172620;
   color: #51ac67;
   border: none;
+  padding: 12px;
+  box-sizing: border-box;
+  resize: none;
 }
 
 textarea:focus {
@@ -58,5 +61,7 @@ button {
 }
 
 select {
+    height: 40px;
   background-color: #272827;
+  color: #fff;
 }
