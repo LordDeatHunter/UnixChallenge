@@ -3,6 +3,7 @@ const api = "http://127.0.0.1:8000";
 const $ = (id) => document.getElementById(id);
 
 let CHALLENGES = {};
+let LAST_SUBMISSION = null;
 
 const loadChallenges = async () => {
   const res = await fetch(`${api}/challenges`);
@@ -26,8 +27,9 @@ const loadChallenges = async () => {
     CHALLENGES[$`challenge-select`.value]?.description || "";
 };
 
-const run = async (cmd) => {
+const run = async () => {
   const challenge_id = $`challenge-select`.value;
+  const cmd = $`cmd`.value;
   $`test-results`.textContent = "Running...";
 
   const res = await fetch(api + "/submit", {
@@ -36,8 +38,8 @@ const run = async (cmd) => {
     body: JSON.stringify({ challenge_id, cmd }),
   });
 
-  const data = await res.json();
-  createTestResults(data.summary.results);
+  LAST_SUBMISSION = await res.json();
+  createTestResults();
 };
 
 const createTestResult = (index, test) => {
@@ -64,14 +66,22 @@ const createTestResult = (index, test) => {
   desc.classList.add("test-description");
   div.appendChild(desc);
 
+  div.addEventListener("click", () => {
+    $`expected-output`.textContent = test.expected || "";
+    $`stdout`.textContent = test.stdout || "";
+    $`stderr`.textContent = test.stderr || "";
+  });
+
   return div;
 };
 
-const createTestResults = (results) => {
+const createTestResults = () => {
+  if (!LAST_SUBMISSION || !LAST_SUBMISSION.summary) return;
+
   const testResultsDiv = $("test-results");
 
   testResultsDiv.innerHTML = "";
-  results.forEach((test, index) => {
+  LAST_SUBMISSION.summary.results.forEach((test, index) => {
     const testResultDiv = createTestResult(index + 1, test);
     testResultsDiv.appendChild(testResultDiv);
   });
@@ -81,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $`cmd`.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      run(e.value);
+      run();
     }
   });
 
