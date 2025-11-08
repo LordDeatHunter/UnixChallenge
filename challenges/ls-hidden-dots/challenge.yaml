@@ -1,0 +1,18 @@
+id: ls-hidden-dots
+title: "List hidden dotfiles (non-recursive)"
+difficulty: easy
+time_limit_ms: 2000
+memory_limit_mb: 128
+statement: |
+  Print only the names of hidden dotfiles (files starting with a dot) in the
+  current directory, non-recursive, one per line, sorted lexicographically.
+  Exclude "." and "..", and exclude directories (only regular files).
+  Do not include size/permissions; just filenames.
+
+  Working directory will contain various files/dirs including hidden ones.
+
+  Examples of valid outputs:
+    .env
+    .gitignore
+tags: ["ls", "find", "glob", "shell"]
+

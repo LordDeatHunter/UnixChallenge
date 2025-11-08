@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Unix Challenge (name subject to change)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 20px; }
+  textarea, input, select { width: 100%; font-family: ui-monospace, SFMono-Regular, monospace; }
+  textarea { height: 140px; }
+  pre { background: #111; color: #eee; padding: 10px; overflow: auto; }
+  .row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  button { padding: 8px 12px; }
+</style>
+<h1>Unix Challenge (name subject to change)</h1>
+
+<label>Challenge</label>
+<select id="challenge"></select>
+
+<label>Command</label>
+<textarea id="cmd" placeholder="e.g. sort | uniq -c | sort -nr"></textarea>
+
+<button id="run">Run</button>
+
+<div class="row">
+  <div>
+    <h3>Result</h3>
+    <pre id="result"></pre>
+  </div>
+  <div>
+    <h3>Stdout</h3>
+    <pre id="stdout"></pre>
+    <h3>Stderr</h3>
+    <pre id="stderr"></pre>
+  </div>
+</div>
+
+<script>
+const api = "http://127.0.0.1:8000";
+
+async function loadChallenges() {
+  const res = await fetch(api + "/challenges");
+  const data = await res.json();
+  const sel = document.getElementById("challenge");
+  sel.innerHTML = "";
+  data.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.title ? `${c.title} (${c.id})` : c.id;
+    sel.appendChild(opt);
+  });
+}
+
+async function run() {
+  const challenge_id = document.getElementById("challenge").value;
+  const cmd = document.getElementById("cmd").value;
+  document.getElementById("result").textContent = "Running...";
+  const res = await fetch(api + "/submit", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ challenge_id, cmd })
+  });
+  const data = await res.json();
+  document.getElementById("result").textContent =
+    JSON.stringify(data.summary || data, null, 2);
+  document.getElementById("stdout").textContent = data.stdout || "";
+  document.getElementById("stderr").textContent = data.stderr || "";
+}
+
+document.getElementById("run").addEventListener("click", run);
+loadChallenges();
+</script>
