@@ -34,12 +34,36 @@ textarea:focus {
   outline: none;
 }
 
+#test-results,
 pre {
   background-color: #272827;
   color: #eee;
   padding: 10px;
   overflow: auto;
   min-height: 20px;
+}
+
+.test-result {
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 6px;
+
+  &:hover {
+    background-color: #1e1e1e;
+  }
+
+  span {
+    display: inline-block;
+  }
+
+  &.test-pass > span.test-status {
+    color: #51ac67;
+  }
+
+  &.test-fail > span.test-status {
+    color: #ff4b4b;
+  }
 }
 
 .row {
@@ -61,7 +85,7 @@ button {
 }
 
 select {
-    height: 40px;
+  height: 40px;
   background-color: #272827;
   color: #fff;
 }
