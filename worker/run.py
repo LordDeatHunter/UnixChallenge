@@ -108,6 +108,7 @@ def judge(chal_dir, submission_cmd):
             "elapsed_ms": ms,
             "pass": bool(passed),
             "stdout": actual,
+            "stderr": err.decode(errors='replace')[:1000],
             "expected": expected
         }
         all_results.append(test_result)

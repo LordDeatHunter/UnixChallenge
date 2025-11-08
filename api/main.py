@@ -46,22 +46,9 @@ def submit(req: SubmitReq):
         except Exception:
             summary = {"raw_stdout": p.stdout}
 
-        run_id = summary.get("run_id")
-        stdout_preview = ""
-        stderr_preview = ""
-        if run_id:
-            stdout = ROOT / "artifacts" / run_id / "stdout.txt"
-            stderr = ROOT / "artifacts" / run_id / "run.stderr"
-            if stdout.exists():
-                stdout_preview = stdout.read_text(errors="replace")[:10000]
-            if stderr.exists():
-                stderr_preview = stderr.read_text(errors="replace")[:10000]
-
         return JSONResponse(
             {
                 "summary": summary,
-                "stdout": stdout_preview,
-                "stderr": stderr_preview,
                 "worker_rc": p.returncode,
             }
         )
