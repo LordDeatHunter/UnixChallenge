@@ -1,23 +1,17 @@
 <!doctype html>
 <meta charset="utf-8" />
 <title>Unix Challenge (name subject to change)</title>
-<style>
-  body { font-family: system-ui, sans-serif; margin: 20px; }
-  textarea, input, select { width: 100%; font-family: ui-monospace, SFMono-Regular, monospace; }
-  textarea { height: 140px; }
-  pre { background: #111; color: #eee; padding: 10px; overflow: auto; }
-  .row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
-  button { padding: 8px 12px; }
-</style>
+<link rel="stylesheet" href="style.css"/>
+
 <h1>Unix Challenge (name subject to change)</h1>
 
+<div class="challenge-row">
 <label>Challenge</label>
 <select id="challenge"></select>
 
 <label>Command</label>
-<textarea id="cmd" placeholder="e.g. sort | uniq -c | sort -nr"></textarea>
-
-<button id="run">Run</button>
+<textarea id="cmd" placeholder="e.g. sort | uniq -c | sort -nr" spellcheck="false"></textarea>
+</div>
 
 <div class="row">
   <div>
@@ -64,6 +58,12 @@ async function run() {
   document.getElementById("stderr").textContent = data.stderr || "";
 }
 
-document.getElementById("run").addEventListener("click", run);
+document.getElementById("cmd").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    run();
+  }
+});
+
 loadChallenges();
 </script>

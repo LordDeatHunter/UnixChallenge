@@ -1,0 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
+* {
+  font-family: "VT323", monospace;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 20px;
+  background-color: #161716;
+  color: #fff;
+}
+
+textarea,
+input,
+select {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+textarea {
+  font-family: "VT323", monospace;
+  font-size: 24px;
+  height: 140px;
+  background-color: #172620;
+  color: #51ac67;
+  border: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+pre {
+  background-color: #272827;
+  color: #eee;
+  padding: 10px;
+  overflow: auto;
+  min-height: 20px;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.challenge-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+button {
+  padding: 8px 12px;
+  background-color: #272827;
+  color: white;
+}
+
+select {
+  background-color: #272827;
+}
