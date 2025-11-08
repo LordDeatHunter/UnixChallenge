@@ -3,7 +3,7 @@ title: "List hidden dotfiles (non-recursive)"
 difficulty: easy
 time_limit_ms: 2000
 memory_limit_mb: 128
-statement: |
+description: |
   Print only the names of hidden dotfiles (files starting with a dot) in the
   current directory, non-recursive, one per line, sorted lexicographically.
   Exclude "." and "..", and exclude directories (only regular files).
@@ -15,4 +15,3 @@ statement: |
     .env
     .gitignore
 tags: ["ls", "find", "glob", "shell"]
-

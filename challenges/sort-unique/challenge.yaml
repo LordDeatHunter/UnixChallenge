@@ -1,3 +1,9 @@
 id: sort-unique
+title: "Sort unique lines"
+difficulty: easy
 time_limit_ms: 2000
-memory_limit_mb: 256
+memory_limit_mb: 128
+description: |
+  Given a text file named `input.txt`, print all unique lines from the file,
+  sorted in lexicographical order. Each line should appear only once in the output.
+tags: ["sort", "uniq", "text processing", "shell"]

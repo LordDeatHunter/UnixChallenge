@@ -2,10 +2,17 @@ const api = "http://127.0.0.1:8000";
 
 const $ = (id) => document.getElementById(id);
 
+let CHALLENGES = {};
+
 const loadChallenges = async () => {
   const res = await fetch(`${api}/challenges`);
   const data = await res.json();
-  const sel = document.getElementById("challenge");
+  const sel = $`challenge-select`;
+
+  CHALLENGES = {};
+  data.forEach((c) => {
+    CHALLENGES[c.id] = c;
+  });
 
   sel.innerHTML = "";
   data.forEach((c) => {
@@ -14,11 +21,13 @@ const loadChallenges = async () => {
     opt.textContent = c.title ? `${c.title} (${c.id})` : c.id;
     sel.appendChild(opt);
   });
+
+  $`challenge-description`.textContent =
+    CHALLENGES[$`challenge-select`.value]?.description || "";
 };
 
-const run = async () => {
-  const challenge_id = document.getElementById("challenge").value;
-  const cmd = document.getElementById("cmd").value;
+const run = async (cmd) => {
+  const challenge_id = $`challenge-select`.value;
   $`test-results`.textContent = "Running...";
 
   const res = await fetch(api + "/submit", {
@@ -69,14 +78,17 @@ const createTestResults = (results) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  const tmp = $("cmd");
-  console.log(tmp);
-
-  $("cmd").addEventListener("keydown", (e) => {
+  $`cmd`.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      run();
+      run(e.value);
     }
+  });
+
+  $`challenge-select`.addEventListener("change", () => {
+    $`test-results`.innerHTML = "No tests run yet.";
+    $`challenge-description`.textContent =
+      CHALLENGES[$`challenge-select`.value]?.description || "";
   });
 });
 

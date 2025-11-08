@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-import uvicorn, subprocess, json, os, pathlib
+import json
+import yaml
+import pathlib
+import uvicorn
+import subprocess
 
 app = FastAPI()
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -16,17 +20,15 @@ def challenges():
     chal_dir = ROOT / "challenges"
     for d in chal_dir.iterdir():
         y = d / "challenge.yaml"
-        if y.exists():
-            title = ""
-            try:
-                # naive parse title
-                for line in y.read_text().splitlines():
-                    if line.startswith("title:"):
-                        title = line.split(":",1)[1].strip().strip('"')
-                        break
-            except:
-                pass
-            out.append({"id": d.name, "title": title or d.name})
+        if not y.exists():
+            continue
+
+        with y.open("r") as f:
+            data = yaml.safe_load(f)
+            title = data.get("title", "")
+            description = data.get("description", "")
+
+        out.append({"id": d.name, "title": title or d.name, "description": description or ""})
     return out
 
 @app.post("/submit")
