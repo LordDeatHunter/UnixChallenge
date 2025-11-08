@@ -53,7 +53,7 @@ const createTestResult = (index, test) => {
   div.appendChild(indexSpan);
 
   const status = document.createElement("span");
-  status.textContent = test.pass ? "✔" : "❌";
+  status.textContent = test.pass ? "✔" : "✘";
   status.classList.add("test-status");
   div.appendChild(status);
 
@@ -99,6 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
     $`test-results`.innerHTML = "No tests run yet.";
     $`challenge-description`.textContent =
       CHALLENGES[$`challenge-select`.value]?.description || "";
+    $`expected-output`.textContent = "";
+    $`stdout`.textContent = "";
+    $`stderr`.textContent = "";
   });
 });
 
