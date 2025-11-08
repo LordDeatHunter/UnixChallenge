@@ -22,7 +22,30 @@ def run_cmd(cmd, timeout_s):
     return rc, out, err, int((time.time()-start)*1000)
 
 
-def docker_run(mounts, bash_cmd, mem_mb=256, cpus="1", timeout_s=3):
+def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
+    base = [
+        "docker","run","--rm",
+        "--network","none",
+        "--pids-limit","128",
+        "--cpus",cpus,
+        "--memory",f"{mem_mb}m",
+        "--tmpfs","/tmp:rw,size=64m",
+        "--cap-drop","ALL",
+        "--workdir","/work",
+        "--init",
+    ]
+
+    host, remote = file_to_copy
+
+    base += ["-v", f"{volume_name}:/work"]
+    base += ["-v", f"{os.path.abspath(host)}:/setup.sh:ro"]
+
+    base += [RUNNER_IMAGE, "bash", "-lc", f"/setup.sh"]
+
+    return run_cmd(base, timeout_s)
+
+
+def docker_run(mounts, bash_cmd, volume_name=None, mem_mb=256, cpus="1", timeout_s=3):
     base = [
         "docker","run","--rm",
         "--network","none",
@@ -32,11 +55,14 @@ def docker_run(mounts, bash_cmd, mem_mb=256, cpus="1", timeout_s=3):
         "--memory",f"{mem_mb}m",
         "--tmpfs","/tmp:rw,size=64m",
         "--cap-drop","ALL",
-        "--init",
+        "--workdir","/work",
     ]
 
     for host, ctr, ro in mounts:
         base += ["-v", f"{os.path.abspath(host)}:{ctr}:{'ro' if ro else 'rw'}"]
+
+    if volume_name:
+        base += ["-v", f"{volume_name}:/work"]
 
     base += [RUNNER_IMAGE, "bash", "-lc", bash_cmd]
 
@@ -65,53 +91,56 @@ def judge(chal_dir, submission_cmd):
     all_results = []
 
     for solution_file in solution_files:
-        # Extract test number from solution_N.out
         test_num = solution_file.stem.split('_')[1]
         setup_path = test_dir / f"setup_{test_num}.sh"
 
-        # Run setup for this specific test case
-        if setup_path.exists():
+        if not setup_path.exists():
+            print(json.dumps({"error": f"Missing setup script for test {test_num}"}))
+            continue
+
+        current_test_dir = work / f"test_{test_num}"
+        current_test_dir.mkdir(parents=True, exist_ok=True)
+
+        volume_name = f"leetunix_test_{run_id}_{test_num}"
+        subprocess.run(["docker", "volume", "create", volume_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        try:
+            rc, out, err, ms = docker_setup((setup_path, f"setup_{test_num}.sh"), volume_name)
+            (current_test_dir/f"setup_{test_num}.log").write_bytes(out + err)
+
+            run = f"set -euo pipefail; set -o pipefail; {submission_cmd}"
+
             rc, out, err, ms = docker_run(
-                [(chal, "/challenge", True), (work, "/work", False)],
-                f"cd /work && chmod +x /challenge/tests/public/setup_{test_num}.sh 2>/dev/null || true && /challenge/tests/public/setup_{test_num}.sh || true",
-                timeout_s=10
+                [],
+                run,
+                volume_name=volume_name,
+                timeout_s=3
             )
-            (work/f"setup_{test_num}.log").write_bytes(out + err)
 
-        # Build and run test command
-        run = "cd /work && set -euo pipefail; set -o pipefail; "
-        run += f"({submission_cmd}) > /work/stdout_{test_num}.txt"
+            (current_test_dir/f"run_{test_num}.stderr").write_bytes(err)
+            (current_test_dir/f"run_{test_num}.stdout").write_bytes(out)
 
-        rc, out, err, ms = docker_run(
-            [(chal, "/challenge", True), (work, "/work", False)],
-            run,
-            timeout_s=3
-        )
+            actual = out.decode(errors='replace')
+            actual = strip_lines(actual, " ")
 
-        (work/f"run_{test_num}.stderr").write_bytes(err)
-        (work/f"run_{test_num}.stdout").write_bytes(out)
+            expected = solution_file.read_bytes()
+            expected = expected.decode(errors='replace')
+            expected = strip_lines(expected, " ")
 
-        actual_path = work/f"stdout_{test_num}.txt"
-        actual = actual_path.read_bytes() if actual_path.exists() else b""
-        actual = actual.decode(errors='replace')
-        actual = strip_lines(actual, " ")
+            passed = (rc == 0 and actual == expected)
 
-        expected = solution_file.read_bytes()
-        expected = expected.decode(errors='replace')
-        expected = strip_lines(expected, " ")
-
-        passed = (rc == 0 and actual == expected)
-
-        test_result = {
-            "test_num": test_num,
-            "exit_code": rc,
-            "elapsed_ms": ms,
-            "pass": bool(passed),
-            "stdout": actual,
-            "stderr": err.decode(errors='replace')[:1000],
-            "expected": expected
-        }
-        all_results.append(test_result)
+            test_result = {
+                "test_num": test_num,
+                "exit_code": rc,
+                "elapsed_ms": ms,
+                "pass": bool(passed),
+                "stdout": actual,
+                "stderr": err.decode(errors='replace')[:1000],
+                "expected": expected
+            }
+            all_results.append(test_result)
+        finally:
+            subprocess.run(["docker", "volume", "rm", volume_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     summary = {
         "run_id": run_id,
@@ -123,6 +152,7 @@ def judge(chal_dir, submission_cmd):
     }
     (work/"summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
