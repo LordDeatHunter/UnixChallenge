@@ -18,18 +18,6 @@ select {
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
-textarea {
-  font-family: "VT323", monospace;
-  font-size: 24px;
-  height: 140px;
-  background-color: #172620;
-  color: #51ac67;
-  border: none;
-  padding: 12px;
-  box-sizing: border-box;
-  resize: none;
-}
-
 textarea:focus {
   outline: none;
 }
@@ -90,4 +78,66 @@ select {
   height: 40px;
   background-color: #272827;
   color: #fff;
+}
+
+.input-div {
+  width: 100%;
+  height: 148px;
+
+  textarea {
+    font-family: "VT323", monospace;
+    font-size: 36px;
+    height: 100%;
+    background-color: #172620;
+    color: #69d483;
+    &::placeholder {
+      color: #489a5c;
+    }
+    box-shadow:
+      0 0 2px #69d483,
+      0 0 4px #69d483,
+      0 0 16px #69d48366;
+    text-shadow:
+      0 0 2px #69d483,
+      0 0 20px #69d483,
+      0 0 10px #69d483;
+    border: none;
+    padding: 12px;
+    box-sizing: border-box;
+    resize: none;
+  }
+
+  div {
+    position: relative;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    top: -148px;
+  }
+}
+
+.scanlines {
+  position: relative;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(128, 128, 128, 0.2) 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  background-size: 100% 6px;
+  width: 100%;
+  height: 100%;
+
+  animation: move-scanlines 60s linear infinite;
+  z-index: 20;
+}
+
+@keyframes move-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
 }
