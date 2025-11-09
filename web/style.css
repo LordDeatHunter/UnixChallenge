@@ -89,22 +89,28 @@ select {
     font-size: 36px;
     height: 100%;
     background-color: #172620;
-    color: #69d483;
-    &::placeholder {
-      color: #489a5c;
-    }
+    color: #92eea8;
     box-shadow:
       0 0 2px #69d483,
       0 0 4px #69d483,
       0 0 16px #69d48366;
     text-shadow:
       0 0 2px #69d483,
-      0 0 20px #69d483,
+      0 0 6px #69d483,
       0 0 10px #69d483;
     border: none;
     padding: 12px;
     box-sizing: border-box;
     resize: none;
+
+    &::placeholder {
+      color: #489a5c;
+
+      text-shadow:
+        0 0 2px #69d48366,
+        0 0 6px #69d48366,
+        0 0 10px #69d48366;
+    }
   }
 
   div {
@@ -125,11 +131,11 @@ select {
     rgba(128, 128, 128, 0.2) 50%,
     rgba(0, 0, 0, 0.2) 100%
   );
-  background-size: 100% 6px;
+  background-size: 100% 8px;
   width: 100%;
   height: 100%;
 
-  animation: move-scanlines 60s linear infinite;
+  animation: move-scanlines 10s ease infinite;
   z-index: 20;
 }
 
