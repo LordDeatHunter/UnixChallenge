@@ -1,0 +1,12 @@
+id,name,email,role,status
+5,Eve,e@example.com,admin,active
+BEGIN
+EVENT:2025-03-01T12:15:33Z DOWNLOAD user=heidi size=2048
+END
+deadbeef
+cafebabe
+literal equals: a(b)[c]{d}^$.*+?|-\
+blank
+
+line with trailing spaces···
+TAB	SEPARATED	VALUES

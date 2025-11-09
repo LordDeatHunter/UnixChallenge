@@ -1,0 +1,10 @@
+id: find-common-lines
+title: "Find common lines"
+difficulty: easy
+time_limit_ms: 2000
+memory_limit_mb: 128
+description: |
+  Given two text files named `A.txt` and `B.txt`, print all lines that are common to both files.
+  The order of the lines should be the same as they appear in `A.txt`.
+  Each line should appear only once in the output.
+tags: ["text processing", "shell", "common lines", "uniq"]
