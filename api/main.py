@@ -39,8 +39,15 @@ def challenges():
             data = yaml.safe_load(f)
             title = data.get("title", "")
             description = data.get("description", "")
+            tags = data.get("tags", [])
 
-        out.append({"id": d.name, "title": title or d.name, "description": description or ""})
+        out.append({
+            "id": d.name,
+            "title": title or d.name,
+            "description": description,
+            "tags": tags
+        })
+
     return out
 
 @app.post("/submit")

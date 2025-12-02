@@ -80,6 +80,33 @@ select {
   color: #fff;
 }
 
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #2d4a3e;
+  color: #92eea8;
+  border-radius: 16px;
+  font-size: 18px;
+  border: 1px solid #3d5a4e;
+  box-shadow: 0 0 4px rgba(105, 212, 131, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background-color: #3d5a4e;
+  box-shadow: 0 0 8px rgba(105, 212, 131, 0.4);
+  transform: translateY(-2px);
+  border-color: #4d6a5e;
+}
+
 .input-div {
   width: 100%;
   height: 148px;
