@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import { TestResult } from "@/types";
+import type { Component } from "solid-js";
+import type { TestResult } from "@/types";
 
 interface OutputPanelProps {
   selectedTest: TestResult | null;
