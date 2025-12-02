@@ -4,69 +4,137 @@ import json
 import time
 import uuid
 import pathlib
-import subprocess
+import docker
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
 
-def run_cmd(cmd, timeout_s):
-    start = time.time()
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    try:
-        out, err = p.communicate(timeout=timeout_s)
-        rc = p.returncode
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, err, rc = b"", b"TIMEOUT\n", 124
-
-    return rc, out, err, int((time.time()-start)*1000)
 
 
 def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
-    base = [
-        "docker","run","--rm",
-        "--network","none",
-        "--pids-limit","128",
-        "--cpus",cpus,
-        "--memory",f"{mem_mb}m",
-        "--tmpfs","/tmp:rw,size=64m",
-        "--cap-drop","ALL",
-        "--workdir","/work",
-        "--init",
-    ]
-
+    client = docker.from_env()
     host, remote = file_to_copy
 
-    base += ["-v", f"{volume_name}:/work"]
-    base += ["-v", f"{os.path.abspath(host)}:/setup.sh:ro"]
+    start = time.time()
+    container = None
 
-    base += [RUNNER_IMAGE, "bash", "-lc", f"/setup.sh"]
+    try:
+        container = client.containers.run(
+            RUNNER_IMAGE,
+            command=["bash", "-lc", "/setup.sh"],
+            volumes={
+                volume_name: {'bind': '/work', 'mode': 'rw'},
+                os.path.abspath(host): {'bind': '/setup.sh', 'mode': 'ro'}
+            },
+            network_mode='none',
+            pids_limit=128,
+            cpu_quota=int(float(cpus) * 100_000),
+            cpu_period=100_000,
+            mem_limit=f"{mem_mb}m",
+            tmpfs={'/tmp': 'rw,size=64m'},
+            cap_drop=['ALL'],
+            working_dir='/work',
+            init=True,
+            remove=False,
+            detach=True,
+            stdout=True,
+            stderr=True,
+        )
 
-    return run_cmd(base, timeout_s)
+        result = container.wait(timeout=timeout_s)
+        elapsed_ms = int((time.time() - start) * 1000)
+
+        rc = result['StatusCode']
+        out = container.logs(stdout=True, stderr=False)
+        err = container.logs(stdout=False, stderr=True)
+
+        container.remove()
+        return rc, out, err, elapsed_ms
+
+    except Exception as e:
+        elapsed_ms = int((time.time() - start) * 1000)
+
+        if container:
+            try:
+                container.kill()
+                out = container.logs(stdout=True, stderr=False)
+                err = container.logs(stdout=False, stderr=True)
+                container.remove()
+
+                if "timeout" in str(e).lower() or isinstance(e, TimeoutError):
+                    return 124, out, b"TIMEOUT\n" + err, elapsed_ms
+                else:
+                    return 1, out, err, elapsed_ms
+            except Exception:
+                pass
+
+        return 1, b"", str(e).encode(), elapsed_ms
+    finally:
+        client.close()
 
 
 def docker_run(mounts, bash_cmd, volume_name=None, mem_mb=256, cpus="1", timeout_s=3):
-    base = [
-        "docker","run","--rm",
-        "--network","none",
-        "--read-only",
-        "--pids-limit","128",
-        "--cpus",cpus,
-        "--memory",f"{mem_mb}m",
-        "--tmpfs","/tmp:rw,size=64m",
-        "--cap-drop","ALL",
-        "--workdir","/work",
-    ]
+    client = docker.from_env()
 
+    volumes = {}
     for host, ctr, ro in mounts:
-        base += ["-v", f"{os.path.abspath(host)}:{ctr}:{'ro' if ro else 'rw'}"]
+        volumes[os.path.abspath(host)] = {'bind': ctr, 'mode': 'ro' if ro else 'rw'}
 
     if volume_name:
-        base += ["-v", f"{volume_name}:/work"]
+        volumes[volume_name] = {'bind': '/work', 'mode': 'rw'}
 
-    base += [RUNNER_IMAGE, "bash", "-lc", bash_cmd]
+    start = time.time()
+    container = None
 
-    return run_cmd(base, timeout_s)
+    try:
+        container = client.containers.run(
+            RUNNER_IMAGE,
+            command=["bash", "-lc", bash_cmd],
+            volumes=volumes,
+            network_mode='none',
+            read_only=True,
+            pids_limit=128,
+            cpu_quota=int(float(cpus) * 100000),
+            cpu_period=100000,
+            mem_limit=f"{mem_mb}m",
+            tmpfs={'/tmp': 'rw,size=64m'},
+            cap_drop=['ALL'],
+            working_dir='/work',
+            remove=False,
+            detach=True,
+            stdout=True,
+            stderr=True,
+        )
+
+        result = container.wait(timeout=timeout_s)
+        elapsed_ms = int((time.time() - start) * 1000)
+
+        rc = result['StatusCode']
+        out = container.logs(stdout=True, stderr=False)
+        err = container.logs(stdout=False, stderr=True)
+
+        container.remove()
+        return rc, out, err, elapsed_ms
+
+    except Exception as e:
+        elapsed_ms = int((time.time() - start) * 1000)
+
+        if container:
+            try:
+                container.kill()
+                out = container.logs(stdout=True, stderr=False)
+                err = container.logs(stdout=False, stderr=True)
+                container.remove()
+
+                if "timeout" in str(e).lower() or isinstance(e, TimeoutError):
+                    return 124, out, b"TIMEOUT\n" + err, elapsed_ms
+                else:
+                    return 1, out, err, elapsed_ms
+            except Exception:
+                pass
+
+        return 1, b"", str(e).encode(), elapsed_ms
+    finally:
+        client.close()
 
 
 def strip_lines(s, chars):
@@ -102,7 +170,15 @@ def judge(chal_dir, submission_cmd):
         current_test_dir.mkdir(parents=True, exist_ok=True)
 
         volume_name = f"leetunix_test_{run_id}_{test_num}"
-        subprocess.run(["docker", "volume", "create", volume_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        client = docker.from_env()
+        try:
+            volume = client.volumes.create(name=volume_name)
+        except Exception as e:
+            print(json.dumps({"error": f"Failed to create volume: {str(e)}"}))
+            continue
+        finally:
+            client.close()
 
         try:
             rc, out, err, ms = docker_setup((setup_path, f"setup_{test_num}.sh"), volume_name)
@@ -114,7 +190,7 @@ def judge(chal_dir, submission_cmd):
                 [],
                 run,
                 volume_name=volume_name,
-                timeout_s=3
+                timeout_s=1
             )
 
             (current_test_dir/f"run_{test_num}.stderr").write_bytes(err)
@@ -140,7 +216,14 @@ def judge(chal_dir, submission_cmd):
             }
             all_results.append(test_result)
         finally:
-            subprocess.run(["docker", "volume", "rm", volume_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            client = docker.from_env()
+            try:
+                volume = client.volumes.get(volume_name)
+                volume.remove()
+            except Exception:
+                pass
+            finally:
+                client.close()
 
     summary = {
         "run_id": run_id,
