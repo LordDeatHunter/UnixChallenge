@@ -1,41 +1,15 @@
 <!doctype html>
 <html lang="en">
-  <meta charset="utf-8" />
-  <title>Unix Challenge (name subject to change)</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="script.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Unix Challenge (name subject to change)</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
 
-  <h1>Unix Challenge (name subject to change)</h1>
-
-  <div class="challenge-row">
-    <label for="challenge-select">Challenge</label>
-    <select id="challenge-select"></select>
-    <div id="challenge-tags" class="tags-container"></div>
-    <pre id="challenge-description"></pre>
-
-    <label>Command</label>
-    <div class="input-div">
-      <textarea
-        id="cmd"
-        placeholder='e.g. echo "hello world"'
-        spellcheck="false"
-      ></textarea>
-      <div class="scanlines"></div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div>
-      <h3>Tests</h3>
-      <div id="test-results">No tests run yet.</div>
-    </div>
-    <div>
-      <h3>Expected</h3>
-      <pre id="expected-output"></pre>
-      <h3>Stdout</h3>
-      <pre id="stdout"></pre>
-      <h3>Stderr</h3>
-      <pre id="stderr"></pre>
-    </div>
-  </div>
+    <script src="/src/index.tsx" type="module"></script>
+  </body>
 </html>
