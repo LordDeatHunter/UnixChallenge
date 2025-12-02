@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import json
 import yaml
 import pathlib
@@ -8,6 +9,14 @@ import uvicorn
 import subprocess
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 class SubmitReq(BaseModel):
