@@ -2,11 +2,15 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import json
+import sys
 import yaml
 import pathlib
 import uvicorn
-import subprocess
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from worker.run import judge
 
 app = FastAPI()
 app.add_middleware(
@@ -17,7 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 class SubmitReq(BaseModel):
     challenge_id: str
@@ -42,30 +45,26 @@ def challenges():
 
 @app.post("/submit")
 def submit(req: SubmitReq):
-    cmd = [
-        "python3",
-        str(ROOT / "worker" / "run.py"),
-        str(ROOT / "challenges" / req.challenge_id),
-        req.cmd,
-    ]
+    chal_path = ROOT / "challenges" / req.challenge_id
+
+    if not chal_path.exists():
+        return JSONResponse(
+            {"error": "Challenge not found"}, status_code=404
+        )
 
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        summary = judge(str(chal_path), req.cmd)
 
-        try:
-            summary = json.loads(p.stdout or "{}")
-        except Exception:
-            summary = {"raw_stdout": p.stdout}
+        if summary and "error" in summary:
+            return JSONResponse(
+                {"error": summary["error"]}, status_code=400
+            )
 
+        return JSONResponse({"summary": summary})
+
+    except Exception as e:
         return JSONResponse(
-            {
-                "summary": summary,
-                "worker_rc": p.returncode,
-            }
-        )
-    except subprocess.TimeoutExpired:
-        return JSONResponse(
-            {"error": "judge timeout"}, status_code=504
+            {"error": f"Internal error: {str(e)}"}, status_code=500
         )
 
 if __name__ == "__main__":

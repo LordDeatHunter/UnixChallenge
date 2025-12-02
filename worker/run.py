@@ -8,8 +8,6 @@ import docker
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
 
-
-
 def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
     client = docker.from_env()
     host, remote = file_to_copy
@@ -153,8 +151,7 @@ def judge(chal_dir, submission_cmd):
     solution_files = sorted(test_dir.glob("solution_*.out"))
 
     if not solution_files:
-        print(json.dumps({"error": "No solution files found (solution_*.out)"}))
-        return
+        return {"error": "No solution files found (solution_*.out)"}
 
     all_results = []
 
@@ -234,11 +231,12 @@ def judge(chal_dir, submission_cmd):
         "results": all_results
     }
     (work/"summary.json").write_text(json.dumps(summary, indent=2))
-    print(json.dumps(summary, indent=2))
+    return summary
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("usage: run.py <challenge_dir> <submission_cmd>")
         sys.exit(1)
-    judge(sys.argv[1], sys.argv[2])
+    result = judge(sys.argv[1], sys.argv[2])
+    print(json.dumps(result, indent=2))
