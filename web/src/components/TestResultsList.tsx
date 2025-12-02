@@ -1,6 +1,6 @@
 import { Component, For, Show } from "solid-js";
-import { TestResult } from "../types";
-import TestResultItem from "./TestResultItem";
+import { TestResult } from "@/types";
+import TestResultItem from "@/components/TestResultItem";
 
 interface TestResultsListProps {
   results: TestResult[] | undefined;

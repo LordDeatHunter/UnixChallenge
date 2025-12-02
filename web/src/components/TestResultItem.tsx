@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { TestResult } from "../types";
+import { TestResult } from "@/types";
 
 interface TestResultItemProps {
   test: TestResult;

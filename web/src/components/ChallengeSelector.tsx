@@ -1,5 +1,5 @@
 import { Component, For } from "solid-js";
-import { Challenge } from "../types";
+import { Challenge } from "@/types";
 
 interface ChallengeSelectorProps {
   challenges: Challenge[];

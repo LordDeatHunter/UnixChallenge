@@ -1,10 +1,10 @@
 import { Component, createSignal, onMount } from "solid-js";
-import { Challenge, TestResult, Submission } from "./types";
-import ChallengeSelector from "./components/ChallengeSelector";
-import TagsDisplay from "./components/TagsDisplay";
-import CommandInput from "./components/CommandInput";
-import TestResultsList from "./components/TestResultsList";
-import OutputPanel from "./components/OutputPanel";
+import { Challenge, TestResult, Submission } from "@/types";
+import ChallengeSelector from "@/components/ChallengeSelector";
+import TagsDisplay from "@/components/TagsDisplay";
+import CommandInput from "@/components/CommandInput";
+import TestResultsList from "@/components/TestResultsList";
+import OutputPanel from "@/components/OutputPanel";
 
 const API_URL = "http://127.0.0.1:8000";
 
