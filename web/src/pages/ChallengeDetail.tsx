@@ -18,6 +18,7 @@ import {
   runSubmission,
   loadChallenges,
 } from "@/store";
+import CheatSheet from "@/components/CheatSheet";
 
 const ChallengeDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -76,6 +77,8 @@ const ChallengeDetail: Component = () => {
               </div>
 
               <OutputPanel selectedTest={selectedTest()} />
+
+              <CheatSheet />
             </div>
           </>
         )}
