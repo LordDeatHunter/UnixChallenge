@@ -1,0 +1,9 @@
+id: check-if-text-files-exist
+title: "Check if Text Files Exist"
+difficulty: easy
+time_limit_ms: 1000
+memory_limit_mb: 32
+description: |
+  The output should be "text files found" if any text files (files with a `.txt` extension) exist in the current directory,
+  and "no text files found" otherwise.
+tags: [ "file handling", "shell", "text files", "file existence" ]
