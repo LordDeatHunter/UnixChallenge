@@ -1,0 +1,32 @@
+id: department-salary-sum
+title: "Department salary sum"
+difficulty: easy
+time_limit_ms: 1000
+memory_limit_mb: 128
+description: |
+  Given a CSV file `employees.csv` with the following columns:
+
+  - `id`: Employee ID
+  - `name`: Employee name
+  - `department`: Department name
+  - `salary`: Employee salary (integer)
+
+  Write a command to calculate the total salary for each department and print
+  the results sorted by department name in ascending order. The output should
+  have two columns: `department` and `total_salary`, separated by a comma.
+
+  Example input (`employees.csv`):
+
+      id,name,department,salary
+      1,Alice,Engineering,70000
+      2,Bob,HR,50000
+      3,Charlie,Engineering,80000
+      4,Dave,Marketing,60000
+      5,Eve,HR,55000
+
+  Expected output:
+
+      Engineering,150000
+      HR,105000
+      Marketing,60000
+tags: ["csv", "awk", "shell", "text-processing"]
