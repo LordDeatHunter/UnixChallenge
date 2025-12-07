@@ -5,8 +5,11 @@ import time
 import uuid
 import pathlib
 import docker
+import logging
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
+
+logger = logging.getLogger("uvicorn")
 
 
 def get_docker_client():
@@ -23,6 +26,12 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
     client = get_docker_client()
     host, remote = file_to_copy
 
+    setup_content = pathlib.Path(host).read_bytes()
+    setup_content = setup_content.replace(b'\r\n', b'\n')
+
+    temp_setup = pathlib.Path(host).parent / f".{pathlib.Path(host).name}.tmp"
+    temp_setup.write_bytes(setup_content)
+
     start = time.time()
     container = None
 
@@ -32,7 +41,7 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
             command=["bash", "-lc", "/setup.sh"],
             volumes={
                 volume_name: {'bind': '/work', 'mode': 'rw'},
-                os.path.abspath(host): {'bind': '/setup.sh', 'mode': 'ro'}
+                os.path.abspath(str(temp_setup)): {'bind': '/setup.sh', 'mode': 'ro'}
             },
             network_mode='none',
             pids_limit=128,
@@ -79,17 +88,12 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
         return 1, b"", str(e).encode(), elapsed_ms
     finally:
         client.close()
+        if temp_setup.exists():
+            temp_setup.unlink()
 
 
 def docker_run(mounts, bash_cmd, volume_name=None, mem_mb=256, cpus="1", timeout_s=3):
     client = get_docker_client()
-    try:
-        client = docker.from_env()
-    except Exception as e:
-        error_msg = str(e)
-        if "CreateFile" in error_msg or "FileNotFoundError" in error_msg or "Cannot connect to Docker" in error_msg:
-            raise RuntimeError("Docker is not running or not accessible. Please ensure Docker Desktop is running and try again.")
-        raise
     volumes = {}
     for host, ctr, ro in mounts:
         volumes[os.path.abspath(host)] = {'bind': ctr, 'mode': 'ro' if ro else 'rw'}
@@ -177,7 +181,7 @@ def judge(chal_dir, submission_cmd):
         setup_path = test_dir / f"setup_{test_num}.sh"
 
         if not setup_path.exists():
-            print(json.dumps({"error": f"Missing setup script for test {test_num}"}))
+            logger.error(f"Missing setup script for test {test_num}")
             continue
 
         current_test_dir = work / f"test_{test_num}"
@@ -189,6 +193,7 @@ def judge(chal_dir, submission_cmd):
         try:
             volume = client.volumes.create(name=volume_name)
         except Exception as e:
+            logger.error(f"Failed to create volume: {str(e)}")
             return {"error": f"Failed to create volume: {str(e)}"}
         finally:
             client.close()
