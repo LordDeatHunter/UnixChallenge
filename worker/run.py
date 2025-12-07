@@ -8,8 +8,19 @@ import docker
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
 
+
+def get_docker_client():
+    try:
+        return docker.from_env()
+    except Exception as e:
+        error_msg = str(e)
+        if "CreateFile" in error_msg or "FileNotFoundError" in error_msg or "Cannot connect to Docker" in error_msg:
+            raise RuntimeError("Docker is not running or not accessible.")
+        raise
+
+
 def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
-    client = docker.from_env()
+    client = get_docker_client()
     host, remote = file_to_copy
 
     start = time.time()
@@ -71,8 +82,14 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
 
 
 def docker_run(mounts, bash_cmd, volume_name=None, mem_mb=256, cpus="1", timeout_s=3):
-    client = docker.from_env()
-
+    client = get_docker_client()
+    try:
+        client = docker.from_env()
+    except Exception as e:
+        error_msg = str(e)
+        if "CreateFile" in error_msg or "FileNotFoundError" in error_msg or "Cannot connect to Docker" in error_msg:
+            raise RuntimeError("Docker is not running or not accessible. Please ensure Docker Desktop is running and try again.")
+        raise
     volumes = {}
     for host, ctr, ro in mounts:
         volumes[os.path.abspath(host)] = {'bind': ctr, 'mode': 'ro' if ro else 'rw'}
@@ -168,12 +185,11 @@ def judge(chal_dir, submission_cmd):
 
         volume_name = f"leetunix_test_{run_id}_{test_num}"
 
-        client = docker.from_env()
+        client = get_docker_client()
         try:
             volume = client.volumes.create(name=volume_name)
         except Exception as e:
-            print(json.dumps({"error": f"Failed to create volume: {str(e)}"}))
-            continue
+            return {"error": f"Failed to create volume: {str(e)}"}
         finally:
             client.close()
 
@@ -213,7 +229,7 @@ def judge(chal_dir, submission_cmd):
             }
             all_results.append(test_result)
         finally:
-            client = docker.from_env()
+            client = get_docker_client()
             try:
                 volume = client.volumes.get(volume_name)
                 volume.remove()

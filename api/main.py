@@ -8,6 +8,9 @@ import pathlib
 import uvicorn
 import urllib.request
 import urllib.error
+import logging
+
+logger = logging.getLogger("uvicorn")
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -72,8 +75,10 @@ def submit(req: SubmitReq):
         return JSONResponse({"summary": summary})
 
     except Exception as e:
+        logger.error(f"Error during submission: {str(e)}")
+
         return JSONResponse(
-            {"error": f"Internal error: {str(e)}"}, status_code=500
+            {"error": f"Internal server error"}, status_code=500
         )
 
 @app.get("/cheatsheet/{query:path}")
