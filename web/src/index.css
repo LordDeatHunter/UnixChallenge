@@ -13,6 +13,22 @@ h1 {
   @apply text-5xl mb-5;
 }
 
+.header {
+  @apply flex items-center gap-4 mb-6;
+}
+
+.header h1 {
+  @apply mb-0;
+}
+
+.header .back-link {
+  @apply mb-0;
+}
+
+.logo {
+  @apply h-16 w-16 object-contain flex-shrink-0;
+}
+
 h3 {
   @apply text-3xl my-2;
 }

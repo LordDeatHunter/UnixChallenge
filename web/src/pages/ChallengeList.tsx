@@ -16,7 +16,10 @@ const ChallengeList: Component = () => {
 
   return (
     <>
-      <h1>Unix Challenge (name subject to change)</h1>
+      <div class="header">
+        <img src="/assets/unix-challenge.png" alt="Unix Challenge" class="logo" />
+        <h1>Unix Challenge (name subject to change)</h1>
+      </div>
 
       <div class="challenge-list-container">
         <div class="search-section">

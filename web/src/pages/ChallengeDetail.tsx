@@ -35,8 +35,14 @@ const ChallengeDetail: Component = () => {
 
   return (
     <>
-      <div class="back-link">
-        <A href="/">← Back to Challenges</A>
+      <div class="header">
+        <A href="/">
+          <img src="/assets/unix-challenge.png" alt="Unix Challenge" class="logo" />
+        </A>
+        <h1>{selectedChallenge()?.title || "Challenge"}</h1>
+        <div class="back-link">
+          <A href="/">← Back to Challenges</A>
+        </div>
       </div>
 
       <Show
@@ -50,7 +56,6 @@ const ChallengeDetail: Component = () => {
       >
         {(challenge) => (
           <>
-            <h1>{challenge().title}</h1>
 
             <div class="challenge-row">
               <TagsDisplay tags={challenge().tags} />
