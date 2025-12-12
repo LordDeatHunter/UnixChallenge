@@ -11,19 +11,21 @@ interface TestResultsListProps {
 
 const TestResultsList: Component<TestResultsListProps> = (props) => (
   <div id="test-results">
-    <Show
-      when={props.results}
-      fallback={props.isRunning ? "Running..." : "No tests run yet."}
-    >
-      <For each={props.results}>
-        {(test, index) => (
-          <TestResultItem
-            test={test}
-            index={index()}
-            onSelect={props.onSelectTest}
-          />
-        )}
-      </For>
+    <Show when={!props.isRunning} fallback="Running..." >
+      <Show
+        when={props.results}
+        fallback="No tests run yet."
+      >
+        <For each={props.results}>
+          {(test, index) => (
+            <TestResultItem
+              test={test}
+              index={index()}
+              onSelect={props.onSelectTest}
+            />
+          )}
+        </For>
+      </Show>
     </Show>
     <Show when={props.error}>
       <div style="color: #ff4b4b;">Error: {props.error}</div>

@@ -50,6 +50,7 @@ export const runSubmission = async () => {
 
   setIsRunning(true);
   setSelectedTest(null);
+  setSubmission(null);
 
   try {
     const res = await fetch(`${API_URL}/submit`, {

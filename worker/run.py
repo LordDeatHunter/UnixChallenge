@@ -28,7 +28,7 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
 
     setup_content = pathlib.Path(host).read_bytes()
     setup_content = setup_content.replace(b'\r\n', b'\n')
-
+    
     temp_setup = pathlib.Path(host).parent / f".{pathlib.Path(host).name}.tmp"
     temp_setup.write_bytes(setup_content)
 
@@ -86,6 +86,7 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
                 pass
 
         return 1, b"", str(e).encode(), elapsed_ms
+
     finally:
         client.close()
         if temp_setup.exists():
