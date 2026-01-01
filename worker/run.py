@@ -6,6 +6,7 @@ import uuid
 import pathlib
 import docker
 import logging
+import asyncio
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
 
@@ -163,7 +164,7 @@ def strip_lines(s, chars):
     return "\n".join(stripped).strip(chars)
 
 
-def judge(chal_dir, submission_cmd):
+async def judge(chal_dir, submission_cmd):
     chal = pathlib.Path(chal_dir)
     run_id = str(uuid.uuid4())[:8]
     work = pathlib.Path("artifacts")/run_id
@@ -200,16 +201,15 @@ def judge(chal_dir, submission_cmd):
             client.close()
 
         try:
-            rc, out, err, ms = docker_setup((setup_path, f"setup_{test_num}.sh"), volume_name)
+            rc, out, err, ms = await asyncio.to_thread(
+                docker_setup, (setup_path, f"setup_{test_num}.sh"), volume_name
+            )
             (current_test_dir/f"setup_{test_num}.log").write_bytes(out + err)
 
             run = f"set -euo pipefail; set -o pipefail; {submission_cmd}"
 
-            rc, out, err, ms = docker_run(
-                [],
-                run,
-                volume_name=volume_name,
-                timeout_s=1
+            rc, out, err, ms = await asyncio.to_thread(
+                docker_run, [], run, volume_name, timeout_s=1
             )
 
             (current_test_dir/f"run_{test_num}.stderr").write_bytes(err)
@@ -260,5 +260,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("usage: run.py <challenge_dir> <submission_cmd>")
         sys.exit(1)
-    result = judge(sys.argv[1], sys.argv[2])
+    result = asyncio.run(judge(sys.argv[1], sys.argv[2]))
     print(json.dumps(result, indent=2))

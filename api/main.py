@@ -56,7 +56,7 @@ def challenges():
     return out
 
 @app.post("/submit")
-def submit(req: SubmitReq):
+async def submit(req: SubmitReq):
     chal_path = ROOT / "challenges" / req.challenge_id
 
     if not chal_path.exists():
@@ -65,7 +65,7 @@ def submit(req: SubmitReq):
         )
 
     try:
-        summary = judge(str(chal_path), req.cmd)
+        summary = await judge(str(chal_path), req.cmd)
 
         if summary and "error" in summary:
             return JSONResponse(
