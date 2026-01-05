@@ -57,7 +57,20 @@ def challenges():
 
 @app.post("/submit")
 async def submit(req: SubmitReq):
-    chal_path = ROOT / "challenges" / req.challenge_id
+    if not req.challenge_id or not req.challenge_id.replace('-', '').replace('_', '').isalnum():
+        return JSONResponse(
+            {"error": "Invalid challenge ID"}, status_code=400
+        )
+
+    chal_path = (ROOT / "challenges" / req.challenge_id).resolve()
+    challenges_dir = (ROOT / "challenges").resolve()
+
+    try:
+        chal_path.relative_to(challenges_dir)
+    except ValueError:
+        return JSONResponse(
+            {"error": "Invalid challenge ID"}, status_code=400
+        )
 
     if not chal_path.exists():
         return JSONResponse(
