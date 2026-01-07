@@ -1,0 +1,80 @@
+services:
+  # Docker-in-Docker service for the test containers
+  dind:
+    image: docker:29-dind
+    privileged: true
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    volumes:
+      - docker-cache:/var/lib/docker
+    networks:
+      - backend
+    command: ["dockerd", "--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock", "--tls=false"]
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - DOCKER_HOST=tcp://dind:2375
+    volumes:
+      - ./challenges:/app/challenges:ro
+      - ./artifacts:/app/artifacts
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      dind:
+        condition: service_healthy
+      runner-builder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Build the runner image in DinD
+  runner-builder:
+    image: docker:29-cli
+    environment:
+      - DOCKER_HOST=tcp://dind:2375
+    volumes:
+      - ./images/runner:/runner:ro
+    networks:
+      - backend
+    depends_on:
+      dind:
+        condition: service_healthy
+    command: >
+      sh -c "
+        docker build -t unixchallenge-runner:latest /runner &&
+        echo 'Runner image built successfully'
+      "
+
+  # Web frontend
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3000:80"
+    networks:
+      - frontend
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  docker-cache:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+

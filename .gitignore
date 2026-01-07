@@ -11,7 +11,13 @@ wheels/
 
 # IDE
 .idea/
+.vscode/
 
 # Builds
 artifacts/
 api/artifacts
+
+# Docker
+.env
+docker-compose.override.yml
+*.tar.gz

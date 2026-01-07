@@ -1,0 +1,19 @@
+services:
+  api:
+    volumes:
+      - ./api:/app/api:ro
+      - ./worker:/app/worker:ro
+      - ./challenges:/app/challenges:ro
+      - ./artifacts:/app/artifacts
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uv run uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  web:
+    build:
+      target: builder
+    command: bun run dev --host
+    ports:
+      - "3000:5173"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}

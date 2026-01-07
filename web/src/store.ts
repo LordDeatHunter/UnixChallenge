@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import type { Challenge, Submission, TestResult } from "@/types";
 
-export const API_URL = "http://127.0.0.1:8000";
+export const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export const [challenges, setChallenges] = createSignal<Challenge[]>([]);
 export const [selectedChallengeId, setSelectedChallengeId] =
