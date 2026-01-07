@@ -4,6 +4,7 @@ import json
 import time
 import uuid
 import pathlib
+import base64
 import docker
 import logging
 import asyncio
@@ -29,9 +30,9 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
 
     setup_content = pathlib.Path(host).read_bytes()
     setup_content = setup_content.replace(b'\r\n', b'\n')
-    
-    temp_setup = pathlib.Path(host).parent / f".{pathlib.Path(host).name}.tmp"
-    temp_setup.write_bytes(setup_content)
+
+    encoded_script = base64.b64encode(setup_content).decode('ascii')
+    command = f"echo '{encoded_script}' | base64 -d | bash"
 
     start = time.time()
     container = None
@@ -39,10 +40,9 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
     try:
         container = client.containers.run(
             RUNNER_IMAGE,
-            command=["bash", "-lc", "/setup.sh"],
+            command=["bash", "-c", command],
             volumes={
-                volume_name: {'bind': '/work', 'mode': 'rw'},
-                os.path.abspath(str(temp_setup)): {'bind': '/setup.sh', 'mode': 'ro'}
+                volume_name: {'bind': '/work', 'mode': 'rw'}
             },
             network_mode='none',
             pids_limit=128,
@@ -90,8 +90,6 @@ def docker_setup(file_to_copy, volume_name, mem_mb=512, cpus="1", timeout_s=10):
 
     finally:
         client.close()
-        if temp_setup.exists():
-            temp_setup.unlink()
 
 
 def docker_run(mounts, bash_cmd, volume_name=None, mem_mb=256, cpus="1", timeout_s=3):
@@ -205,6 +203,8 @@ async def judge(chal_dir, submission_cmd):
                 docker_setup, (setup_path, f"setup_{test_num}.sh"), volume_name
             )
             (current_test_dir/f"setup_{test_num}.log").write_bytes(out + err)
+
+            logger.info(f"Setup completed with exit code {rc}, output: {out}, error: {err}")
 
             run = f"set -euo pipefail; set -o pipefail; {submission_cmd}"
 
