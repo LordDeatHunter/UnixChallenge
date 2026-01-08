@@ -84,6 +84,10 @@ pre {
   @apply grid gap-3 grid-cols-2;
 }
 
+@utility col {
+  @apply flex flex-col;
+}
+
 .challenge-row {
   @apply flex flex-col gap-4 mb-6;
 }
@@ -286,6 +290,14 @@ select {
 .cheatsheet-examples span:hover {
   @apply bg-[#3d5a4e] border-[#92eea8];
   box-shadow: 0 0 4px rgba(105, 212, 131, 0.3);
+}
+
+.output-panel {
+  @apply col gap-3;
+
+  pre {
+    @apply p-2.5 min-h-[52px];
+  }
 }
 
 /* ANSI formatting classes for cheat.sh output */

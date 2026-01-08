@@ -74,20 +74,21 @@ const ChallengeDetail: Component = () => {
             </div>
 
             <div class="row">
-              <div>
-                <h3>Tests</h3>
-                <TestResultsList
-                  results={submission()?.summary?.results}
-                  isRunning={isRunning()}
-                  error={submission()?.error}
-                  onSelectTest={setSelectedTest}
-                  selectedTest={selectedTest()}
-                />
+              <div class="col gap-6">
+                <div class="col">
+                  <h3>Tests</h3>
+                  <TestResultsList
+                    results={submission()?.summary?.results}
+                    isRunning={isRunning()}
+                    error={submission()?.error}
+                    onSelectTest={setSelectedTest}
+                    selectedTest={selectedTest()}
+                  />
+                </div>
+                <CheatSheet />
               </div>
 
               <OutputPanel selectedTest={selectedTest()} />
-
-              <CheatSheet />
             </div>
           </>
         )}

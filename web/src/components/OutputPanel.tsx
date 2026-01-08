@@ -6,7 +6,7 @@ interface OutputPanelProps {
 }
 
 const OutputPanel: Component<OutputPanelProps> = (props) => (
-  <div>
+  <div class="output-panel">
     <h3>Expected</h3>
     <pre id="expected-output">{props.selectedTest?.expected || ""}</pre>
 
