@@ -7,21 +7,20 @@ interface TestResultsListProps {
   isRunning: boolean;
   error: string | undefined;
   onSelectTest: (test: TestResult) => void;
+  selectedTest: TestResult | null | undefined;
 }
 
 const TestResultsList: Component<TestResultsListProps> = (props) => (
   <div id="test-results">
-    <Show when={!props.isRunning} fallback="Running..." >
-      <Show
-        when={props.results}
-        fallback="No tests run yet."
-      >
+    <Show when={!props.isRunning} fallback="Running...">
+      <Show when={props.results} fallback="No tests run yet.">
         <For each={props.results}>
           {(test, index) => (
             <TestResultItem
               test={test}
               index={index()}
               onSelect={props.onSelectTest}
+              isSelected={props.selectedTest?.test_num === test.test_num}
             />
           )}
         </For>

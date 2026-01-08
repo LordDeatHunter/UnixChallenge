@@ -1,22 +1,22 @@
 import { type Component, onMount, Show } from "solid-js";
-import { useParams, A } from "@solidjs/router";
+import { A, useParams } from "@solidjs/router";
 import TagsDisplay from "@/components/TagsDisplay";
 import CommandInput from "@/components/CommandInput";
 import TestResultsList from "@/components/TestResultsList";
 import OutputPanel from "@/components/OutputPanel";
 import {
   challenges,
-  selectedChallenge,
-  setSelectedChallengeId,
   cmd,
-  setCmd,
-  submission,
-  setSubmission,
-  selectedTest,
-  setSelectedTest,
   isRunning,
-  runSubmission,
   loadChallenges,
+  runSubmission,
+  selectedChallenge,
+  selectedTest,
+  setCmd,
+  setSelectedChallengeId,
+  setSelectedTest,
+  setSubmission,
+  submission,
 } from "@/store";
 import CheatSheet from "@/components/CheatSheet";
 
@@ -37,7 +37,11 @@ const ChallengeDetail: Component = () => {
     <>
       <div class="header">
         <A href="/">
-          <img src="/assets/unix-challenge.png" alt="Unix Challenge" class="logo" />
+          <img
+            src="/assets/unix-challenge.png"
+            alt="Unix Challenge"
+            class="logo"
+          />
         </A>
         <h1>{selectedChallenge()?.title || "Challenge"}</h1>
         <div class="back-link">
@@ -56,7 +60,6 @@ const ChallengeDetail: Component = () => {
       >
         {(challenge) => (
           <>
-
             <div class="challenge-row">
               <TagsDisplay tags={challenge().tags} />
 
@@ -78,6 +81,7 @@ const ChallengeDetail: Component = () => {
                   isRunning={isRunning()}
                   error={submission()?.error}
                   onSelectTest={setSelectedTest}
+                  selectedTest={selectedTest()}
                 />
               </div>
 

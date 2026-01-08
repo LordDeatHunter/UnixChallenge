@@ -53,7 +53,7 @@ pre {
 }
 
 .test-result {
-  @apply p-2 cursor-pointer flex gap-1.5;
+  @apply p-2 cursor-pointer flex gap-1.5 transition-colors duration-150;
 }
 
 .test-result:hover {
@@ -70,6 +70,14 @@ pre {
 
 .test-result.test-fail > span.test-status {
   @apply text-[#ff4b4b];
+}
+
+.test-result.test-selected {
+  @apply bg-[#2e3d2e] border-l-4 border-[#69d483];
+}
+
+.test-result.test-selected .test-description {
+  @apply text-[#c6ffd4];
 }
 
 .row {
