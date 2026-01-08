@@ -1,7 +1,8 @@
 import { createSignal } from "solid-js";
 import type { Challenge, Submission, TestResult } from "@/types";
 
-export const API_URL = import.meta.env.VITE_API_URL || "/api";
+export const API_URL: string =
+  (import.meta.env.VITE_API_URL as string) || "http://127.0.0.1:8000";
 
 export const [challenges, setChallenges] = createSignal<Challenge[]>([]);
 export const [selectedChallengeId, setSelectedChallengeId] =
@@ -38,10 +39,11 @@ export const filteredChallenges = () => {
 export const loadChallenges = async () => {
   try {
     const res = await fetch(`${API_URL}/challenges`);
-    const data = await res.json();
+    const data = (await res.json()) as Challenge[];
     setChallenges(data);
   } catch (error) {
     console.error("Failed to load challenges:", error);
+    setChallenges([]);
   }
 };
 
@@ -62,11 +64,11 @@ export const runSubmission = async () => {
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as Submission;
     setSubmission(data);
   } catch (error) {
     console.error("Submission failed:", error);
-    setSubmission({ error: "Failed to submit" });
+    setSubmission({ error: "Failed to submit" } as Submission);
   } finally {
     setIsRunning(false);
   }

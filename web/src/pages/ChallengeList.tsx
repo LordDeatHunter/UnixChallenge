@@ -11,13 +11,17 @@ import TagsDisplay from "@/components/TagsDisplay";
 
 const ChallengeList: Component = () => {
   onMount(() => {
-    loadChallenges();
+    void loadChallenges();
   });
 
   return (
     <>
       <div class="header">
-        <img src="/assets/unix-challenge.png" alt="Unix Challenge" class="logo" />
+        <img
+          src="/assets/unix-challenge.png"
+          alt="Unix Challenge"
+          class="logo"
+        />
         <h1>Unix Challenge (name subject to change)</h1>
       </div>
 

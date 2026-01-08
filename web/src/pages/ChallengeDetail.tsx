@@ -23,9 +23,9 @@ import CheatSheet from "@/components/CheatSheet";
 const ChallengeDetail: Component = () => {
   const params = useParams<{ id: string }>();
 
-  onMount(async () => {
+  onMount(() => {
     if (challenges().length === 0) {
-      await loadChallenges();
+      void loadChallenges();
     }
 
     setSelectedChallengeId(params.id);
@@ -69,7 +69,7 @@ const ChallengeDetail: Component = () => {
               <CommandInput
                 value={cmd()}
                 onInput={setCmd}
-                onSubmit={runSubmission}
+                onSubmit={() => void runSubmission()}
               />
             </div>
 

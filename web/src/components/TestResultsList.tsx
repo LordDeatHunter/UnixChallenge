@@ -27,7 +27,7 @@ const TestResultsList: Component<TestResultsListProps> = (props) => (
       </Show>
     </Show>
     <Show when={props.error}>
-      <div style="color: #ff4b4b;">Error: {props.error}</div>
+      <div style={{ color: "#ff4b4b" }}>Error: {props.error}</div>
     </Show>
   </div>
 );

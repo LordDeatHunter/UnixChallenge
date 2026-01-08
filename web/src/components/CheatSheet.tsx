@@ -44,7 +44,7 @@ const CheatSheet: Component = () => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      fetchCheatSheet();
+      void fetchCheatSheet();
     }
   };
 
@@ -74,6 +74,7 @@ const CheatSheet: Component = () => {
 
   const parseAnsiCodes = (text: string): FormattedSegment[] => {
     const segments: FormattedSegment[] = [];
+    // eslint-disable-next-line no-control-regex
     const ansiRegex = /\x1b\[([0-9;]*)m/g;
 
     let lastIndex = 0;
@@ -167,7 +168,7 @@ const CheatSheet: Component = () => {
           class="cheatsheet-input"
         />
         <button
-          onClick={() => fetchCheatSheet()}
+          onClick={() => void fetchCheatSheet()}
           class="cheatsheet-button"
           disabled={isLoadingCheat()}
         >
@@ -212,10 +213,10 @@ const CheatSheet: Component = () => {
         <div class="cheatsheet-placeholder">
           <p>Search for command documentation and examples.</p>
           <p class="cheatsheet-examples">
-            Try: <span onClick={() => fetchCheatSheet("grep")}>grep</span>,{" "}
-            <span onClick={() => fetchCheatSheet("awk")}>awk</span>,{" "}
-            <span onClick={() => fetchCheatSheet("sed")}>sed</span>,{" "}
-            <span onClick={() => fetchCheatSheet("find")}>find</span>
+            Try: <span onClick={() => void fetchCheatSheet("grep")}>grep</span>,{" "}
+            <span onClick={() => void fetchCheatSheet("awk")}>awk</span>,{" "}
+            <span onClick={() => void fetchCheatSheet("sed")}>sed</span>,{" "}
+            <span onClick={() => void fetchCheatSheet("find")}>find</span>
           </p>
         </div>
       </Show>

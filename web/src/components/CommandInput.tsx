@@ -24,7 +24,7 @@ const CommandInput: Component<CommandInputProps> = (props) => {
         onInput={(e) => props.onInput(e.currentTarget.value)}
         onKeyDown={handleKeyDown}
       />
-      <div class="scanlines"></div>
+      <div class="scanlines" />
     </div>
   );
 };
