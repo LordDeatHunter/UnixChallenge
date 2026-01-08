@@ -19,15 +19,15 @@ services:
   # API service
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.api
+      context: ..
+      dockerfile: docker/Dockerfile.api
     ports:
       - "8000:8000"
     environment:
       - DOCKER_HOST=tcp://dind:2375
     volumes:
-      - ./challenges:/app/challenges:ro
-      - ./artifacts:/app/artifacts
+      - ../challenges:/app/challenges:ro
+      - ../artifacts:/app/artifacts
     networks:
       - backend
       - frontend
@@ -44,7 +44,7 @@ services:
     environment:
       - DOCKER_HOST=tcp://dind:2375
     volumes:
-      - ./images/runner:/runner:ro
+      - ../images/runner:/runner:ro
     networks:
       - backend
     depends_on:
@@ -59,8 +59,8 @@ services:
   # Web frontend
   web:
     build:
-      context: .
-      dockerfile: Dockerfile.web
+      context: ..
+      dockerfile: docker/Dockerfile.web
     ports:
       - "3000:80"
     networks:
