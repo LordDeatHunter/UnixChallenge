@@ -1,4 +1,25 @@
 services:
+  # PostgreSQL database
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: unixchallenge
+      POSTGRES_USER: unixchallenge
+      POSTGRES_PASSWORD: unixchallenge
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend
+    ports:
+      - "54320:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unixchallenge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # Docker-in-Docker service for the test containers
   dind:
     image: docker:29-dind
@@ -25,13 +46,15 @@ services:
       - "8000:8000"
     environment:
       - DOCKER_HOST=tcp://dind:2375
+      - DATABASE_URL=postgresql://unixchallenge:unixchallenge@db:5432/unixchallenge
     volumes:
       - ../challenges:/app/challenges:ro
-      - ../artifacts:/app/artifacts
     networks:
       - backend
       - frontend
     depends_on:
+      db:
+        condition: service_healthy
       dind:
         condition: service_healthy
       runner-builder:
@@ -71,10 +94,10 @@ services:
 
 volumes:
   docker-cache:
+  postgres-data:
 
 networks:
   backend:
     driver: bridge
   frontend:
     driver: bridge
-

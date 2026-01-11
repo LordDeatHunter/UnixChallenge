@@ -1,13 +1,17 @@
-import os
-import sys
-import json
-import time
-import uuid
+import asyncio
+import logging
 import pathlib
 import base64
 import docker
-import logging
-import asyncio
+import json
+import time
+import sys
+import os
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from database.db import save_submission
 
 RUNNER_IMAGE = "unixchallenge-runner:latest"
 
@@ -164,9 +168,7 @@ def strip_lines(s, chars):
 
 async def judge(chal_dir, submission_cmd):
     chal = pathlib.Path(chal_dir)
-    run_id = str(uuid.uuid4())[:8]
-    work = pathlib.Path("artifacts")/run_id
-    work.mkdir(parents=True, exist_ok=True)
+    challenge_id = chal.name
 
     test_dir = chal / "tests" / "public"
     solution_files = sorted(test_dir.glob("solution_*.out"))
@@ -184,10 +186,7 @@ async def judge(chal_dir, submission_cmd):
             logger.error(f"Missing setup script for test {test_num}")
             continue
 
-        current_test_dir = work / f"test_{test_num}"
-        current_test_dir.mkdir(parents=True, exist_ok=True)
-
-        volume_name = f"leetunix_test_{run_id}_{test_num}"
+        volume_name = f"leetunix_test_{challenge_id}_{test_num}_{int(time.time() * 1000)}"
 
         client = get_docker_client()
         try:
@@ -202,7 +201,6 @@ async def judge(chal_dir, submission_cmd):
             rc, out, err, ms = await asyncio.to_thread(
                 docker_setup, (setup_path, f"setup_{test_num}.sh"), volume_name
             )
-            (current_test_dir/f"setup_{test_num}.log").write_bytes(out + err)
 
             logger.info(f"Setup completed with exit code {rc}, output: {out}, error: {err}")
 
@@ -211,9 +209,6 @@ async def judge(chal_dir, submission_cmd):
             rc, out, err, ms = await asyncio.to_thread(
                 docker_run, [], run, volume_name, timeout_s=1
             )
-
-            (current_test_dir/f"run_{test_num}.stderr").write_bytes(err)
-            (current_test_dir/f"run_{test_num}.stdout").write_bytes(out)
 
             actual = out.decode(errors='replace')
             actual = strip_lines(actual, " ")
@@ -245,14 +240,24 @@ async def judge(chal_dir, submission_cmd):
                 client.close()
 
     summary = {
-        "run_id": run_id,
         "total_tests": len(all_results),
         "passed": sum(1 for r in all_results if r["pass"]),
         "failed": sum(1 for r in all_results if not r["pass"]),
         "all_pass": all(r["pass"] for r in all_results),
-        "results": all_results
+        "results": all_results,
     }
-    (work/"summary.json").write_text(json.dumps(summary, indent=2))
+
+    try:
+        submission_id = await save_submission(
+            challenge_id=challenge_id,
+            command=submission_cmd,
+            results=all_results
+        )
+        logger.info(f"Saved submission with ID {submission_id}")
+        summary["id"] = submission_id
+    except Exception as e:
+        logger.error(f"Failed to save submission to database: {str(e)}")
+
     return summary
 
 

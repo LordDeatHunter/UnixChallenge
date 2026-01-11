@@ -11,6 +11,7 @@ RUN uv sync --frozen --no-dev
 
 COPY api/ ./api/
 COPY worker/ ./worker/
+COPY database/ ./database/
 COPY challenges/ ./challenges/
 
 RUN mkdir -p artifacts

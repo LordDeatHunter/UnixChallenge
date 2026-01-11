@@ -1,14 +1,15 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-import sys
-import yaml
-import pathlib
-import uvicorn
+from contextlib import asynccontextmanager
+from pydantic import BaseModel
+from fastapi import FastAPI
 import urllib.request
 import urllib.error
 import logging
+import uvicorn
+import pathlib
+import yaml
+import sys
 
 logger = logging.getLogger("uvicorn")
 
@@ -16,8 +17,25 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from worker.run import judge
+from database.db import (
+    close_pool,
+    get_submission_by_id,
+    get_submissions_by_challenge,
+    get_recent_submissions,
+    get_challenge_stats
+)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    logger.info("Application starting up")
+    yield
+
+    logger.info("Application shutting down")
+    await close_pool()
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -129,6 +147,59 @@ def cheatsheet(query: str):
             f"Failed to fetch documentation: {str(e)}",
             status_code=500
         )
+
+
+@app.get("/submissions/{submission_id}")
+async def get_submission(submission_id: str):
+    try:
+        submission = await get_submission_by_id(submission_id)
+        if submission is None:
+            return JSONResponse(
+                {"error": "Submission not found"}, status_code=404
+            )
+        return JSONResponse(submission)
+    except Exception as e:
+        logger.error(f"Error fetching submission: {str(e)}")
+        return JSONResponse(
+            {"error": "Failed to fetch submission"}, status_code=500
+        )
+
+
+@app.get("/challenges/{challenge_id}/submissions")
+async def get_challenge_submissions(challenge_id: str, limit: int = 100, offset: int = 0):
+    try:
+        submissions = await get_submissions_by_challenge(challenge_id, limit, offset)
+        return JSONResponse({"submissions": submissions})
+    except Exception as e:
+        logger.error(f"Error fetching submissions: {str(e)}")
+        return JSONResponse(
+            {"error": "Failed to fetch submissions"}, status_code=500
+        )
+
+
+@app.get("/challenges/{challenge_id}/stats")
+async def get_challenge_statistics(challenge_id: str):
+    try:
+        stats = await get_challenge_stats(challenge_id)
+        return JSONResponse(stats)
+    except Exception as e:
+        logger.error(f"Error fetching challenge stats: {str(e)}")
+        return JSONResponse(
+            {"error": "Failed to fetch challenge statistics"}, status_code=500
+        )
+
+
+@app.get("/submissions")
+async def get_submissions(limit: int = 50):
+    try:
+        submissions = await get_recent_submissions(limit)
+        return JSONResponse({"submissions": submissions})
+    except Exception as e:
+        logger.error(f"Error fetching recent submissions: {str(e)}")
+        return JSONResponse(
+            {"error": "Failed to fetch submissions"}, status_code=500
+        )
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
