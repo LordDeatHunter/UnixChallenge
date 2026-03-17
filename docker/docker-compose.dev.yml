@@ -2,6 +2,8 @@
 services:
   api:
     container_name: unixchallenge-api-dev
+    ports:
+      - "8000:8000"
     volumes:
       - ../api:/app/api:ro
       - ../worker:/app/worker:ro

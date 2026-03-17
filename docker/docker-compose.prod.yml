@@ -13,6 +13,8 @@ services:
     environment:
       - LOG_LEVEL=info
       - WORKERS=4
+    ports:
+      - "11000:8000"
     logging:
       driver: "json-file"
       options:

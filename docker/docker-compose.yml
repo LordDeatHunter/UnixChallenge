@@ -42,8 +42,6 @@ services:
     build:
       context: ..
       dockerfile: docker/api.dockerfile
-    ports:
-      - "11000:8000"
     environment:
       - DOCKER_HOST=tcp://dind:2375
       - DATABASE_URL=postgresql://unixchallenge:unixchallenge@db:5432/unixchallenge
