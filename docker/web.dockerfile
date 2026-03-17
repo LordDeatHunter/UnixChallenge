@@ -1,11 +1,12 @@
-FROM oven/bun:1-alpine as builder
+FROM oven/bun:1.3.6-alpine AS builder
 
 WORKDIR /app
 
 COPY web/ ./
 
-RUN bun install --frozen-lockfile && \
-    bun run build
+RUN bun add -g vite
+RUN bun install --frozen-lockfile
+RUN bun run build
 
 # Deployment with nginx
 FROM nginx:alpine

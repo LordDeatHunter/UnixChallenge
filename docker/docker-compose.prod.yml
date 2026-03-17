@@ -28,6 +28,12 @@ services:
           memory: 512M
 
   web:
+    container_name: unixchallenge-web
+    build:
+      context: ..
+      dockerfile: docker/web.dockerfile
+    networks:
+      - frontend
     restart: always
     logging:
       driver: "json-file"
