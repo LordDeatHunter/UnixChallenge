@@ -32,6 +32,8 @@ services:
     build:
       context: ..
       dockerfile: docker/web.dockerfile
+    ports:
+      - "11001:80"
     networks:
       - frontend
     restart: always
