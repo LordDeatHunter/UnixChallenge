@@ -200,6 +200,15 @@ select {
   box-shadow: 0 0 12px rgba(105, 212, 131, 0.3);
 }
 
+.challenge-card:focus-visible {
+  @apply outline-none border-[#92eea8] translate-y-0;
+  box-shadow: 0 0 12px rgba(105, 212, 131, 0.3);
+}
+
+.challenge-card:hover:focus-visible {
+  @apply -translate-y-1;
+}
+
 .challenge-card h3 {
   @apply text-3xl mb-3 mt-0 text-[#92eea8];
 }
