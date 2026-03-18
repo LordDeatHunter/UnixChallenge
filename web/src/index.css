@@ -31,6 +31,10 @@ h1 {
   @apply inline-flex items-center;
 }
 
+.logo-stack {
+  @apply relative inline-block h-16 w-16 shrink-0;
+}
+
 .site-header-nav {
   @apply flex items-center gap-2 shrink-0 pr-1;
 }
@@ -49,7 +53,33 @@ h1 {
 }
 
 .logo {
-  @apply h-16 w-16 object-contain flex-shrink-0;
+  @apply h-16 w-16 object-contain;
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity 300ms ease-in-out,
+    filter 300ms ease-in-out,
+    transform 300ms ease-in-out;
+}
+
+.logo-main {
+  z-index: 2;
+  opacity: 1;
+}
+
+.logo-inverse {
+  z-index: 1;
+  opacity: 0.95;
+}
+
+.site-header-logo-link:hover .logo-main,
+.site-header-logo-link:focus-visible .logo-main {
+  opacity: 0;
+}
+
+.site-header-logo-link:hover .logo,
+.site-header-logo-link:focus-visible .logo {
+  filter: drop-shadow(0 0 6px rgba(146, 238, 168, 0.8));
 }
 
 h3 {

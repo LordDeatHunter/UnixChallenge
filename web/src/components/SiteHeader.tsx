@@ -11,7 +11,19 @@ const SiteHeader: Component<SiteHeaderProps> = (props) => (
   <header class="site-header">
     <div class="site-header-main">
       <A href="/" class="site-header-logo-link" aria-label="Go to challenges">
-        <img src="/assets/unix-challenge.png" alt="Unix Challenge" class="logo" />
+        <span class="logo-stack">
+          <img
+            src="/assets/unix-challenge-inverse.png"
+            alt=""
+            aria-hidden="true"
+            class="logo logo-inverse"
+          />
+          <img
+            src="/assets/unix-challenge.png"
+            alt="Unix Challenge"
+            class="logo logo-main"
+          />
+        </span>
       </A>
       <h1>{props.title}</h1>
     </div>
