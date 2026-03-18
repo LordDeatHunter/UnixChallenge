@@ -70,6 +70,7 @@ const ChallengeDetail: Component = () => {
                 value={cmd()}
                 onInput={setCmd}
                 onSubmit={() => void runSubmission()}
+                isSubmitting={isRunning()}
               />
             </div>
 
