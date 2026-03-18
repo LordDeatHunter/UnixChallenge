@@ -1,5 +1,6 @@
 import { type Component, For, onMount } from "solid-js";
 import { A } from "@solidjs/router";
+import SiteHeader from "@/components/SiteHeader";
 import {
   challenges,
   filteredChallenges,
@@ -16,14 +17,10 @@ const ChallengeList: Component = () => {
 
   return (
     <>
-      <div class="header">
-        <img
-          src="/assets/unix-challenge.png"
-          alt="Unix Challenge"
-          class="logo"
-        />
-        <h1>Unix Challenge (name subject to change)</h1>
-      </div>
+      <SiteHeader
+        title="Unix Challenge (name subject to change)"
+        isChallengesPage
+      />
 
       <div class="challenge-list-container">
         <div class="search-section">

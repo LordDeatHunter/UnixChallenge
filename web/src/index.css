@@ -13,16 +13,39 @@ h1 {
   @apply text-5xl mb-5;
 }
 
-.header {
-  @apply flex items-center gap-4 mb-6;
+.site-header {
+  @apply flex items-center justify-between gap-4 mb-6 px-6 pt-3 pb-4 border-b border-[#304137];
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
 }
 
-.header h1 {
-  @apply mb-0;
+.site-header-main {
+  @apply flex items-center gap-4 min-w-0 pl-1;
 }
 
-.header .back-link {
-  @apply mb-0;
+.site-header-main h1 {
+  @apply mb-0 truncate;
+}
+
+.site-header-logo-link {
+  @apply inline-flex items-center;
+}
+
+.site-header-nav {
+  @apply flex items-center gap-2 shrink-0 pr-1;
+}
+
+.site-header-link {
+  @apply inline-flex items-center text-[#9adcad] no-underline text-2xl px-2 py-1 border-b border-transparent transition-all duration-200;
+}
+
+.site-header-link:hover {
+  @apply text-[#c8ffd5] border-[#92eea8];
+}
+
+.site-header-link:focus-visible {
+  @apply outline-none text-[#c8ffd5] border-[#92eea8];
+  box-shadow: 0 2px 0 rgba(105, 212, 131, 0.25);
 }
 
 .logo {
@@ -115,7 +138,7 @@ select {
 }
 
 .input-div {
-  @apply w-full h-[148px];
+  @apply w-full h-[120px];
 }
 
 .command-input {
@@ -123,7 +146,7 @@ select {
 }
 
 .input-div textarea {
-  @apply text-4xl h-full border-none p-3 box-border resize-none;
+  @apply text-3xl h-full border-none p-2.5 box-border resize-none;
   background-color: #172620;
   color: #92eea8;
   box-shadow:
@@ -145,7 +168,7 @@ select {
 }
 
 .input-div div {
-  @apply relative pointer-events-none w-full h-full z-10 -top-[148px];
+  @apply relative pointer-events-none w-full h-full z-10 -top-[120px];
 }
 
 .command-submit-button {
@@ -244,17 +267,125 @@ select {
   @apply text-2xl text-center text-[#ccc] mt-12;
 }
 
-.back-link {
-  @apply mb-4;
+.challenge-detail-page {
+  @apply max-w-[1300px] mx-auto;
 }
 
-.back-link a {
-  @apply inline-block px-4 py-2 bg-[#272827] text-[#92eea8] no-underline rounded border border-[#3d5a4e] transition-all duration-200 text-xl;
+.challenge-detail-layout {
+  @apply flex flex-col gap-6;
 }
 
-.back-link a:hover {
-  @apply bg-[#3d5a4e] border-[#92eea8];
-  box-shadow: 0 0 8px rgba(105, 212, 131, 0.3);
+.challenge-panel {
+  @apply bg-[#202220] border border-[#33453a] rounded-lg p-4;
+  box-shadow:
+    inset 0 0 0 1px rgba(146, 238, 168, 0.04),
+    0 0 12px rgba(0, 0, 0, 0.28);
+}
+
+.challenge-description-panel {
+  @apply flex flex-col gap-3;
+}
+
+.challenge-command-panel {
+  @apply flex flex-col gap-2;
+}
+
+.challenge-command-panel label {
+  @apply mb-0;
+}
+
+.command-help {
+  @apply m-0 text-xl text-[#a8d7b5];
+}
+
+.challenge-output-panel {
+  @apply p-0;
+}
+
+.challenge-output-panel .output-panel {
+  @apply gap-2;
+}
+
+.challenge-results-panel {
+  @apply flex flex-col gap-3;
+}
+
+.challenge-results-header {
+  @apply flex flex-wrap items-end justify-between gap-3;
+}
+
+.challenge-results-header h3 {
+  @apply mt-0 mb-0 flex items-baseline gap-3;
+}
+
+.results-summary {
+  @apply text-xl text-[#92eea8];
+}
+
+.results-test-picker {
+  @apply flex items-center gap-2;
+}
+
+.results-test-picker label {
+  @apply text-xl;
+}
+
+.results-test-picker select {
+  @apply min-w-[220px] h-10 text-xl px-2;
+}
+
+.results-test-picker select.test-select-neutral {
+  @apply border-[#3d5a4e] text-[#d7e7dc];
+}
+
+.results-test-picker select.test-select-pass {
+  @apply border-[#69d483] text-[#9cf0b0];
+  box-shadow: 0 0 6px rgba(81, 172, 103, 0.25);
+}
+
+.results-test-picker select.test-select-fail {
+  @apply border-[#ff4b4b] text-[#ff9898];
+  box-shadow: 0 0 6px rgba(255, 75, 75, 0.22);
+}
+
+.challenge-results-content {
+  @apply bg-[#1b1d1b] border border-[#304137] rounded-md p-3;
+}
+
+.result-output-table {
+  @apply w-full border-collapse;
+}
+
+.result-output-table th,
+.result-output-table td {
+  @apply align-top border-b border-[#2f3f36] py-2;
+}
+
+.result-output-table tr:last-child th,
+.result-output-table tr:last-child td {
+  @apply border-b-0;
+}
+
+.result-output-table th {
+  @apply w-32 pr-3 text-left text-xl text-[#a8d7b5] font-normal;
+}
+
+.result-output-table td pre {
+  @apply min-h-[90px] max-h-[220px] overflow-auto m-0;
+}
+
+.challenge-docs-panel .cheatsheet-content {
+  @apply max-h-[420px];
+}
+
+@media (max-width: 1279px) {
+  .input-div {
+    @apply h-[112px];
+  }
+
+  .input-div div {
+    @apply -top-[112px];
+  }
 }
 
 /* CheatSheet Styles */
