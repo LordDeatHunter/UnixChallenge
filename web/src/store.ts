@@ -73,6 +73,10 @@ export const runSubmission = async () => {
 
     const data = (await res.json()) as Submission;
     setSubmission(data);
+
+    if (data.summary && currentUser()) {
+      void fetchUserChallengeHistory(selectedChallengeId());
+    }
   } catch (error) {
     console.error("Submission failed:", error);
     setSubmission({ error: "Failed to submit" } as Submission);
@@ -157,10 +161,19 @@ export const fetchUserChallengeHistory = async (challengeId: string) => {
 };
 
 export const loadHistoricalSubmission = async (submissionId: string) => {
+  if (!currentUser()) {
+    return;
+  }
+
   try {
-    const res = await fetch(`${API_URL}/submissions/${submissionId}`, {
+    const res = await fetch(`${API_URL}/me/submissions/${submissionId}`, {
       credentials: "include",
     });
+
+    if (!res.ok) {
+      throw new Error("Submission not found");
+    }
+
     const data = await res.json() as {
       id: string;
       results: Array<{

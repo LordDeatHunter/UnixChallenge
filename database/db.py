@@ -180,7 +180,7 @@ async def save_submission(
                         submission_id, test_num, exit_code, elapsed_ms,
                         passed, stdout, stderr
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
                     """,
                     submission_id,
                     result.get("test_num"),
@@ -426,3 +426,62 @@ async def get_user_challenge_submissions(
             }
             for s in submissions
         ]
+
+
+async def get_user_submission_by_id(
+    user_id: str,
+    submission_id: str,
+) -> Optional[Dict[str, Any]]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        submission = await conn.fetchrow(
+            """
+            SELECT id, challenge_id, command, created_at
+            FROM submissions
+            WHERE id = $1 AND user_id = $2
+            """,
+            uuid.UUID(submission_id),
+            uuid.UUID(user_id),
+        )
+
+        if not submission:
+            return None
+
+        test_results = await conn.fetch(
+            """
+            SELECT test_num, exit_code, elapsed_ms, passed, stdout, stderr
+            FROM test_results
+            WHERE submission_id = $1
+            ORDER BY test_num
+            """,
+            submission["id"],
+        )
+
+        total_tests = len(test_results)
+        passed_tests = sum(1 for r in test_results if r["passed"])
+        failed_tests = total_tests - passed_tests
+        execution_time_ms = sum(r["elapsed_ms"] for r in test_results)
+
+        return {
+            "id": str(submission["id"]),
+            "challenge_id": submission["challenge_id"],
+            "command": submission["command"],
+            "created_at": submission["created_at"].isoformat(),
+            "total_tests": total_tests,
+            "passed": passed_tests,
+            "failed": failed_tests,
+            "all_pass": failed_tests == 0,
+            "execution_time_ms": execution_time_ms,
+            "results": [
+                {
+                    "test_num": r["test_num"],
+                    "exit_code": r["exit_code"],
+                    "elapsed_ms": r["elapsed_ms"],
+                    "pass": r["passed"],
+                    "stdout": r["stdout"],
+                    "stderr": r["stderr"],
+                }
+                for r in test_results
+            ],
+        }

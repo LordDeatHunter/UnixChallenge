@@ -23,6 +23,7 @@ from worker.run import judge
 from database.db import (
     close_pool,
     get_submission_by_id,
+    get_user_submission_by_id,
     get_submissions_by_challenge,
     get_recent_submissions,
     get_challenge_stats,
@@ -208,6 +209,18 @@ async def me_submissions(limit: int = 50, offset: int = 0, user=Depends(require_
     except Exception as e:
         logger.error(f"Error fetching user submissions: {e}")
         return JSONResponse({"error": "Failed to fetch submissions"}, status_code=500)
+
+
+@app.get("/me/submissions/{submission_id}")
+async def me_submission_by_id(submission_id: str, user=Depends(require_current_user)):
+    try:
+        submission = await get_user_submission_by_id(user["id"], submission_id)
+        if submission is None:
+            return JSONResponse({"error": "Submission not found"}, status_code=404)
+        return JSONResponse(submission)
+    except Exception as e:
+        logger.error(f"Error fetching user submission: {e}")
+        return JSONResponse({"error": "Failed to fetch submission"}, status_code=500)
 
 
 @app.get("/me/challenges/{challenge_id}/submissions")
