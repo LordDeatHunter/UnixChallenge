@@ -52,6 +52,63 @@ h1 {
   box-shadow: 0 2px 0 rgba(105, 212, 131, 0.25);
 }
 
+.site-header-user-menu {
+  @apply relative;
+}
+
+.site-header-avatar-trigger {
+  @apply flex items-center justify-center w-11 h-11 rounded-full border border-[#3d5a4e] bg-[#233228] cursor-pointer p-0 transition-all duration-200;
+  box-shadow: 0 0 6px rgba(105, 212, 131, 0.18);
+}
+
+.site-header-avatar-trigger:hover,
+.site-header-avatar-trigger[aria-expanded="true"] {
+  @apply border-[#92eea8];
+  box-shadow: 0 0 10px rgba(105, 212, 131, 0.32);
+}
+
+.site-header-avatar-trigger:focus-visible {
+  @apply outline-none border-[#92eea8];
+  box-shadow: 0 0 0 2px rgba(146, 238, 168, 0.22);
+}
+
+.site-header-avatar,
+.site-header-avatar-fallback {
+  @apply w-9 h-9 rounded-full;
+}
+
+.site-header-avatar {
+  @apply object-cover;
+}
+
+.site-header-avatar-fallback {
+  @apply inline-flex items-center justify-center text-[#cbffd7] text-2xl bg-[#2d4a3e];
+}
+
+.site-header-user-dropdown {
+  @apply absolute right-0 top-[calc(100%+0.5rem)] min-w-[220px] border border-[#3d5a4e] rounded-md p-3 bg-[#202220] z-50;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(146, 238, 168, 0.08) inset;
+}
+
+.site-header-user-dropdown-name {
+  @apply m-0 mb-3 text-2xl text-[#c8ffd5] break-all;
+}
+
+.site-header-user-dropdown-logout {
+  @apply w-full h-10 px-3 text-xl border border-[#4b6658] bg-[#28362f] text-[#b9f5c8] rounded cursor-pointer transition-all duration-200;
+}
+
+.site-header-user-dropdown-logout:hover {
+  @apply border-[#92eea8] bg-[#31473b];
+}
+
+.site-header-user-dropdown-logout:focus-visible {
+  @apply outline-none border-[#92eea8];
+  box-shadow: 0 0 0 2px rgba(146, 238, 168, 0.22);
+}
+
 .logo {
   @apply h-16 w-16 object-contain;
   position: absolute;
