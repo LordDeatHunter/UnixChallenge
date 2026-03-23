@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any
 import asyncpg
 import logging
+import uuid
 import os
 
 logger = logging.getLogger("uvicorn")
@@ -26,23 +27,150 @@ async def close_pool():
         _pool = None
 
 
+async def upsert_user(
+    github_user_id: int,
+    login: str,
+    email: str,
+    avatar_url: str,
+) -> Dict[str, Any]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            # Check if an oauth_account already exists for this GitHub user
+            existing = await conn.fetchrow(
+                """
+                SELECT u.id, u.username, u.email, u.profile_picture_url
+                FROM oauth_accounts oa
+                JOIN users u ON oa.user_id = u.id
+                WHERE oa.provider = 'github' AND oa.provider_user_id = $1
+                """,
+                str(github_user_id),
+            )
+
+            if existing:
+                # Update profile picture on every login
+                await conn.execute(
+                    """
+                    UPDATE users SET profile_picture_url = $1, updated_at = NOW()
+                    WHERE id = $2
+                    """,
+                    avatar_url,
+                    existing["id"],
+                )
+                return {
+                    "id": str(existing["id"]),
+                    "username": existing["username"],
+                    "email": existing["email"],
+                    "profile_picture_url": avatar_url,
+                }
+
+            # No oauth_account found — create a new user and link it
+            # Generate a unique username from GitHub login
+            base_username = login
+            username = base_username
+            suffix = 1
+            while await conn.fetchval(
+                "SELECT 1 FROM users WHERE username = $1", username
+            ):
+                username = f"{base_username}_{suffix}"
+                suffix += 1
+
+            user_id = await conn.fetchval(
+                """
+                INSERT INTO users (username, email, profile_picture_url)
+                VALUES ($1, $2, $3)
+                RETURNING id
+                """,
+                username,
+                email,
+                avatar_url,
+            )
+
+            await conn.execute(
+                """
+                INSERT INTO oauth_accounts (user_id, provider, provider_user_id)
+                VALUES ($1, 'github', $2)
+                """,
+                user_id,
+                str(github_user_id),
+            )
+
+            return {
+                "id": str(user_id),
+                "username": username,
+                "email": email,
+                "profile_picture_url": avatar_url,
+            }
+
+
+async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT id, username, email, profile_picture_url
+            FROM users
+            WHERE id = $1
+            """,
+            uuid.UUID(user_id),
+        )
+
+    if not row:
+        return None
+    return {
+        "id": str(row["id"]),
+        "username": row["username"],
+        "email": row["email"],
+        "profile_picture_url": row["profile_picture_url"],
+    }
+
+
+async def update_user_username(user_id: str, new_username: str) -> Optional[Dict[str, Any]]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            UPDATE users SET username = $1, updated_at = NOW()
+            WHERE id = $2
+            RETURNING id, username, email, profile_picture_url
+            """,
+            new_username,
+            uuid.UUID(user_id),
+        )
+
+    if not row:
+        return None
+    return {
+        "id": str(row["id"]),
+        "username": row["username"],
+        "email": row["email"],
+        "profile_picture_url": row["profile_picture_url"],
+    }
+
+
 async def save_submission(
     challenge_id: str,
     command: str,
-    results: List[Dict[str, Any]]
+    results: List[Dict[str, Any]],
+    user_id: Optional[str] = None,
 ) -> str:
     pool = await get_pool()
+    uid = uuid.UUID(user_id) if user_id else None
 
     async with pool.acquire() as conn:
         async with conn.transaction():
             submission_id = await conn.fetchval(
                 """
-                INSERT INTO submissions (challenge_id, command)
-                VALUES ($1, $2)
+                INSERT INTO submissions (challenge_id, command, user_id)
+                VALUES ($1, $2, $3)
                 RETURNING id
                 """,
                 challenge_id,
-                command
+                command,
+                uid,
             )
 
             for result in results:
@@ -222,3 +350,79 @@ async def get_challenge_stats(challenge_id: str) -> Dict[str, Any]:
             "avg_execution_time": float(stats["avg_execution_time"] or 0),
             "unique_solutions": stats["unique_solutions"]
         }
+
+
+async def get_user_submissions(
+    user_id: str,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Dict[str, Any]]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        submissions = await conn.fetch(
+            """
+            SELECT *
+            FROM submission_summary
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT $2 OFFSET $3
+            """,
+            uuid.UUID(user_id),
+            limit,
+            offset,
+        )
+
+        return [
+            {
+                "id": str(s["id"]),
+                "challenge_id": s["challenge_id"],
+                "command": s["command"],
+                "created_at": s["created_at"].isoformat(),
+                "total_tests": s["total_tests"],
+                "passed": s["passed_tests"],
+                "failed": s["failed_tests"],
+                "all_pass": s["all_passed"],
+                "execution_time_ms": s["execution_time_ms"],
+            }
+            for s in submissions
+        ]
+
+
+async def get_user_challenge_submissions(
+    user_id: str,
+    challenge_id: str,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Dict[str, Any]]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        submissions = await conn.fetch(
+            """
+            SELECT *
+            FROM submission_summary
+            WHERE user_id = $1 AND challenge_id = $2
+            ORDER BY created_at DESC
+            LIMIT $3 OFFSET $4
+            """,
+            uuid.UUID(user_id),
+            challenge_id,
+            limit,
+            offset,
+        )
+
+        return [
+            {
+                "id": str(s["id"]),
+                "challenge_id": s["challenge_id"],
+                "command": s["command"],
+                "created_at": s["created_at"].isoformat(),
+                "total_tests": s["total_tests"],
+                "passed": s["passed_tests"],
+                "failed": s["failed_tests"],
+                "all_pass": s["all_passed"],
+                "execution_time_ms": s["execution_time_ms"],
+            }
+            for s in submissions
+        ]

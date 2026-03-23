@@ -11,7 +11,13 @@ services:
       - ../artifacts:/app/artifacts
     environment:
       - PYTHONUNBUFFERED=1
-    command: uv run uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-http://localhost:8000/auth/github/callback}
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECURE=false
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+    command: sh -c "uv run alembic upgrade head && uv run uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
 
   web:
     image: oven/bun:1.3.6-alpine

@@ -1,13 +1,14 @@
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Response
 import urllib.request
 import urllib.error
 import logging
 import uvicorn
 import pathlib
+import httpx
 import yaml
 import sys
 
@@ -16,13 +17,20 @@ logger = logging.getLogger("uvicorn")
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from api.config import settings
+from api.auth import create_access_token, get_current_user, require_current_user
 from worker.run import judge
 from database.db import (
     close_pool,
     get_submission_by_id,
     get_submissions_by_challenge,
     get_recent_submissions,
-    get_challenge_stats
+    get_challenge_stats,
+    get_user_by_id,
+    update_user_username,
+    get_user_submissions,
+    get_user_challenge_submissions,
+    upsert_user,
 )
 
 
@@ -38,7 +46,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[settings.frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +56,175 @@ app.add_middleware(
 class SubmitReq(BaseModel):
     challenge_id: str
     cmd: str
+
+
+class UpdateUsernameReq(BaseModel):
+    username: str
+
+
+# ---------------------------------------------------------------------------
+# GitHub OAuth
+# ---------------------------------------------------------------------------
+
+@app.get("/auth/github")
+def auth_github():
+    params = (
+        f"client_id={settings.github_client_id}"
+        f"&redirect_uri={settings.github_callback_url}"
+        f"&scope=user:email"
+    )
+    return RedirectResponse(f"https://github.com/login/oauth/authorize?{params}")
+
+
+@app.get("/auth/github/callback")
+async def auth_github_callback(code: str, response: Response):
+    # Exchange code for access token
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post(
+            "https://github.com/login/oauth/access_token",
+            json={
+                "client_id": settings.github_client_id,
+                "client_secret": settings.github_client_secret,
+                "code": code,
+                "redirect_uri": settings.github_callback_url,
+            },
+            headers={"Accept": "application/json"},
+            timeout=10,
+        )
+        token_data = token_res.json()
+
+    access_token = token_data.get("access_token")
+    if not access_token:
+        return RedirectResponse(
+            f"{settings.frontend_url}?auth_error=token_exchange_failed"
+        )
+
+    auth_headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+
+    async with httpx.AsyncClient() as client:
+        user_res = await client.get(
+            "https://api.github.com/user", headers=auth_headers, timeout=10
+        )
+        emails_res = await client.get(
+            "https://api.github.com/user/emails", headers=auth_headers, timeout=10
+        )
+
+    if user_res.status_code != 200:
+        return RedirectResponse(
+            f"{settings.frontend_url}?auth_error=github_user_fetch_failed"
+        )
+
+    gh_user = user_res.json()
+    gh_emails = emails_res.json() if emails_res.status_code == 200 else []
+
+    # Require a primary verified email
+    primary_email = next(
+        (e["email"] for e in gh_emails if e.get("primary") and e.get("verified")),
+        None,
+    )
+    if not primary_email:
+        return RedirectResponse(
+            f"{settings.frontend_url}?auth_error=no_verified_email"
+        )
+
+    try:
+        user = await upsert_user(
+            github_user_id=gh_user["id"],
+            login=gh_user["login"],
+            email=primary_email,
+            avatar_url=gh_user.get("avatar_url", ""),
+        )
+    except Exception as e:
+        logger.error(f"Failed to upsert user: {e}")
+        return RedirectResponse(
+            f"{settings.frontend_url}?auth_error=user_creation_failed"
+        )
+
+    jwt_token = create_access_token(user["id"])
+    redirect = RedirectResponse(settings.frontend_url, status_code=302)
+    redirect.set_cookie(
+        key=settings.cookie_name,
+        value=jwt_token,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        max_age=settings.jwt_expiry_days * 86400,
+        path="/",
+    )
+    return redirect
+
+
+@app.post("/auth/logout")
+def auth_logout(response: Response):
+    response.delete_cookie(
+        key=settings.cookie_name,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        path="/",
+    )
+    return JSONResponse({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Current user (/me)
+# ---------------------------------------------------------------------------
+
+@app.get("/me")
+async def me(user=Depends(get_current_user)):
+    if user is None:
+        return JSONResponse(None)
+    return JSONResponse(user)
+
+
+@app.put("/me/username")
+async def update_username(req: UpdateUsernameReq, user=Depends(require_current_user)):
+    username = req.username.strip()
+    if not username or not username.replace("-", "").replace("_", "").isalnum():
+        return JSONResponse(
+            {"error": "Username must be alphanumeric (dashes and underscores allowed)"},
+            status_code=400,
+        )
+    if len(username) > 39:
+        return JSONResponse({"error": "Username too long (max 39 characters)"}, status_code=400)
+
+    try:
+        updated = await update_user_username(user["id"], username)
+        if updated is None:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        return JSONResponse(updated)
+    except Exception as e:
+        if "unique" in str(e).lower() or "duplicate" in str(e).lower():
+            return JSONResponse({"error": "Username already taken"}, status_code=409)
+        logger.error(f"Error updating username: {e}")
+        return JSONResponse({"error": "Failed to update username"}, status_code=500)
+
+
+@app.get("/me/submissions")
+async def me_submissions(limit: int = 50, offset: int = 0, user=Depends(require_current_user)):
+    try:
+        submissions = await get_user_submissions(user["id"], limit, offset)
+        return JSONResponse({"submissions": submissions})
+    except Exception as e:
+        logger.error(f"Error fetching user submissions: {e}")
+        return JSONResponse({"error": "Failed to fetch submissions"}, status_code=500)
+
+
+@app.get("/me/challenges/{challenge_id}/submissions")
+async def me_challenge_submissions(
+    challenge_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    user=Depends(require_current_user),
+):
+    try:
+        submissions = await get_user_challenge_submissions(
+            user["id"], challenge_id, limit, offset
+        )
+        return JSONResponse({"submissions": submissions})
+    except Exception as e:
+        logger.error(f"Error fetching user challenge submissions: {e}")
+        return JSONResponse({"error": "Failed to fetch submissions"}, status_code=500)
 
 @app.get("/challenges")
 def challenges():
@@ -74,7 +251,7 @@ def challenges():
     return out
 
 @app.post("/submit")
-async def submit(req: SubmitReq):
+async def submit(req: SubmitReq, user=Depends(get_current_user)):
     if not req.challenge_id or not req.challenge_id.replace('-', '').replace('_', '').isalnum():
         return JSONResponse(
             {"error": "Invalid challenge ID"}, status_code=400
@@ -96,7 +273,7 @@ async def submit(req: SubmitReq):
         )
 
     try:
-        summary = await judge(str(chal_path), req.cmd)
+        summary = await judge(str(chal_path), req.cmd, user_id=user["id"] if user else None)
 
         if summary and "error" in summary:
             return JSONResponse(

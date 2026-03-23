@@ -7,6 +7,7 @@ import json
 import time
 import sys
 import os
+from typing import Optional
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -166,7 +167,7 @@ def strip_lines(s, chars):
     return "\n".join(stripped).strip(chars)
 
 
-async def judge(chal_dir, submission_cmd):
+async def judge(chal_dir, submission_cmd, user_id: Optional[str] = None):
     chal = pathlib.Path(chal_dir)
     challenge_id = chal.name
 
@@ -251,7 +252,8 @@ async def judge(chal_dir, submission_cmd):
         submission_id = await save_submission(
             challenge_id=challenge_id,
             command=submission_cmd,
-            results=all_results
+            results=all_results,
+            user_id=user_id,
         )
         logger.info(f"Saved submission with ID {submission_id}")
         summary["id"] = submission_id

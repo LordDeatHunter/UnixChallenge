@@ -12,8 +12,12 @@ import CommandInput from "@/components/CommandInput";
 import {
   challenges,
   cmd,
+  currentUser,
+  fetchUserChallengeHistory,
+  isLoadingHistory,
   isRunning,
   loadChallenges,
+  loadHistoricalSubmission,
   runSubmission,
   selectedChallenge,
   selectedTest,
@@ -22,6 +26,7 @@ import {
   setSelectedTest,
   setSubmission,
   submission,
+  userChallengeHistory,
 } from "@/store";
 import CheatSheet from "@/components/CheatSheet";
 import SiteHeader from "@/components/SiteHeader";
@@ -96,6 +101,7 @@ const ChallengeDetail: Component = () => {
     setSelectedChallengeId(params.id);
     setSubmission(null);
     setSelectedTest(null);
+    void fetchUserChallengeHistory(params.id);
   });
 
   return (
@@ -203,6 +209,63 @@ const ChallengeDetail: Component = () => {
             <section class="challenge-panel challenge-docs-panel">
               <CheatSheet />
             </section>
+
+            <Show when={currentUser()}>
+              <section class="challenge-panel challenge-history-panel">
+                <details>
+                  <summary class="challenge-history-summary">
+                    My Previous Submissions
+                    <Show when={userChallengeHistory().length > 0}>
+                      {" "}({userChallengeHistory().length})
+                    </Show>
+                  </summary>
+
+                  <Show when={isLoadingHistory()}>
+                    <p class="history-loading">Loading history...</p>
+                  </Show>
+
+                  <Show when={!isLoadingHistory() && userChallengeHistory().length === 0}>
+                    <p class="history-empty">No previous submissions for this challenge.</p>
+                  </Show>
+
+                  <Show when={!isLoadingHistory() && userChallengeHistory().length > 0}>
+                    <table class="history-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Command</th>
+                          <th>Result</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={userChallengeHistory()}>
+                          {(entry) => (
+                            <tr class={entry.all_pass ? "history-row-pass" : "history-row-fail"}>
+                              <td>{new Date(entry.created_at).toLocaleString()}</td>
+                              <td><code class="history-command">{entry.command}</code></td>
+                              <td>
+                                {entry.all_pass ? "✓" : "✗"}{" "}
+                                {entry.passed}/{entry.total_tests} passed
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  class="history-load-btn"
+                                  onClick={() => void loadHistoricalSubmission(entry.id)}
+                                >
+                                  Load
+                                </button>
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </Show>
+                </details>
+              </section>
+            </Show>
           </div>
         )}
         </Show>

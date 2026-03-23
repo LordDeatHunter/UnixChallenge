@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import type { Challenge, Submission, TestResult } from "@/types";
+import type { Challenge, Submission, SubmissionSummary, TestResult, User } from "@/types";
 
 export const API_URL: string =
   (import.meta.env.VITE_API_URL as string) || "/api";
@@ -20,6 +20,12 @@ export const [cheatQuery, setCheatQuery] = createSignal<string>("");
 export const [cheatContent, setCheatContent] = createSignal<string>("");
 export const [isLoadingCheat, setIsLoadingCheat] = createSignal(false);
 export const [cheatError, setCheatError] = createSignal<string>("");
+
+// Auth / user state
+export const [currentUser, setCurrentUser] = createSignal<User | null>(null);
+export const [isLoadingUser, setIsLoadingUser] = createSignal(true);
+export const [userChallengeHistory, setUserChallengeHistory] = createSignal<SubmissionSummary[]>([]);
+export const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
 
 export const selectedChallenge = () =>
   challenges().find((c) => c.id === selectedChallengeId());
@@ -58,6 +64,7 @@ export const runSubmission = async () => {
     const res = await fetch(`${API_URL}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({
         challenge_id: selectedChallengeId(),
         cmd: cmd(),
@@ -105,5 +112,82 @@ export const fetchCheatSheet = async (query?: string) => {
     );
   } finally {
     setIsLoadingCheat(false);
+  }
+};
+
+export const loadCurrentUser = async () => {
+  setIsLoadingUser(true);
+  try {
+    const res = await fetch(`${API_URL}/me`, { credentials: "include" });
+    const data = (await res.json()) as User | null;
+    setCurrentUser(data);
+  } catch {
+    setCurrentUser(null);
+  } finally {
+    setIsLoadingUser(false);
+  }
+};
+
+export const logout = async () => {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } finally {
+    setCurrentUser(null);
+  }
+};
+
+export const fetchUserChallengeHistory = async (challengeId: string) => {
+  if (!currentUser()) return;
+  setIsLoadingHistory(true);
+  try {
+    const res = await fetch(
+      `${API_URL}/me/challenges/${encodeURIComponent(challengeId)}/submissions?limit=20`,
+      { credentials: "include" },
+    );
+    const data = (await res.json()) as { submissions: SubmissionSummary[] };
+    setUserChallengeHistory(data.submissions ?? []);
+  } catch {
+    setUserChallengeHistory([]);
+  } finally {
+    setIsLoadingHistory(false);
+  }
+};
+
+export const loadHistoricalSubmission = async (submissionId: string) => {
+  try {
+    const res = await fetch(`${API_URL}/submissions/${submissionId}`, {
+      credentials: "include",
+    });
+    const data = await res.json() as {
+      id: string;
+      results: Array<{
+        test_num: string;
+        exit_code: number;
+        elapsed_ms: number;
+        pass: boolean;
+        stdout: string;
+        stderr: string;
+      }>;
+      total_tests: number;
+      passed: number;
+      failed: number;
+      all_pass: boolean;
+    };
+
+    setSubmission({
+      summary: {
+        run_id: data.id,
+        total_tests: data.total_tests,
+        passed: data.passed,
+        failed: data.failed,
+        all_pass: data.all_pass,
+        results: data.results.map((r) => ({ ...r, expected: "" })),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load historical submission:", error);
   }
 };

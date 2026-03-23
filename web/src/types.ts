@@ -1,3 +1,10 @@
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  profile_picture_url: string | null;
+}
+
 export interface Challenge {
   id: string;
   title: string;
@@ -25,4 +32,16 @@ export interface Submission {
     results: TestResult[];
   };
   error?: string;
+}
+
+export interface SubmissionSummary {
+  id: string;
+  challenge_id: string;
+  command: string;
+  created_at: string;
+  total_tests: number;
+  passed: number;
+  failed: number;
+  all_pass: boolean;
+  execution_time_ms: number;
 }

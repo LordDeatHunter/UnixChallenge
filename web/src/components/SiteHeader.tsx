@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
+import { Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { API_URL, currentUser, isLoadingUser, logout } from "@/store";
 
 interface SiteHeaderProps {
   title: string;
@@ -38,6 +40,42 @@ const SiteHeader: Component<SiteHeaderProps> = (props) => (
           Challenges
         </A>
       )}
+
+      <Show when={!isLoadingUser()}>
+        <Show
+          when={currentUser()}
+          fallback={
+            <a
+              href={`${API_URL}/auth/github`}
+              class="site-header-link site-header-login"
+            >
+              Login with GitHub
+            </a>
+          }
+        >
+          {(user) => (
+            <div class="site-header-user">
+              <Show when={user().profile_picture_url}>
+                <img
+                  src={user().profile_picture_url!}
+                  alt={user().username}
+                  class="site-header-avatar"
+                  width={28}
+                  height={28}
+                />
+              </Show>
+              <span class="site-header-username">{user().username}</span>
+              <button
+                type="button"
+                class="site-header-link site-header-logout"
+                onClick={() => void logout()}
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </Show>
+      </Show>
     </nav>
   </header>
 );
