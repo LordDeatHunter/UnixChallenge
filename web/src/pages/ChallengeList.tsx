@@ -39,7 +39,12 @@ const ChallengeList: Component = () => {
           <For each={filteredChallenges()}>
             {(challenge) => (
               <A href={`/challenge/${challenge.id}`} class="challenge-card">
-                <h3>{challenge.title}</h3>
+                <div class="challenge-card-header">
+                  <h3>{challenge.title}</h3>
+                  {challenge.completed && (
+                    <span class="challenge-complete-badge">Complete</span>
+                  )}
+                </div>
                 <TagsDisplay tags={challenge.tags} />
                 <p class="challenge-preview">{challenge.description}</p>
               </A>

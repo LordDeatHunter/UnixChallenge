@@ -44,7 +44,7 @@ export const filteredChallenges = () => {
 
 export const loadChallenges = async () => {
   try {
-    const res = await fetch(`${API_URL}/challenges`);
+    const res = await fetch(`${API_URL}/challenges`, { credentials: "include" });
     const data = (await res.json()) as Challenge[];
     setChallenges(data);
   } catch (error) {

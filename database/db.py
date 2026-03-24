@@ -485,3 +485,20 @@ async def get_user_submission_by_id(
                 for r in test_results
             ],
         }
+
+
+async def get_user_completed_challenge_ids(user_id: str) -> List[str]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT DISTINCT challenge_id
+            FROM submission_summary
+            WHERE user_id = $1
+              AND all_passed = true
+            """,
+            uuid.UUID(user_id),
+        )
+
+    return [row["challenge_id"] for row in rows]

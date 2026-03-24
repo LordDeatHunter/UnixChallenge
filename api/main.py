@@ -24,6 +24,7 @@ from database.db import (
     close_pool,
     get_submission_by_id,
     get_user_submission_by_id,
+    get_user_completed_challenge_ids,
     get_submissions_by_challenge,
     get_recent_submissions,
     get_challenge_stats,
@@ -240,8 +241,13 @@ async def me_challenge_submissions(
         return JSONResponse({"error": "Failed to fetch submissions"}, status_code=500)
 
 @app.get("/challenges")
-def challenges():
+async def challenges(user=Depends(get_current_user)):
     out = []
+    completed_ids = set()
+
+    if user is not None:
+        completed_ids = set(await get_user_completed_challenge_ids(user["id"]))
+
     chal_dir = ROOT / "challenges"
     for d in chal_dir.iterdir():
         y = d / "challenge.yaml"
@@ -258,7 +264,8 @@ def challenges():
             "id": d.name,
             "title": title or d.name,
             "description": description,
-            "tags": tags
+            "tags": tags,
+            "completed": d.name in completed_ids,
         })
 
     return out
