@@ -1,0 +1,44 @@
+.test-result {
+  @apply p-2 cursor-pointer flex gap-1.5 transition-colors duration-150;
+}
+
+.test-result:hover {
+  @apply bg-[#1e1e1e];
+}
+
+.test-result span {
+  @apply inline-block;
+}
+
+.test-result.test-pass > span.test-status {
+  @apply text-[#51ac67];
+}
+
+.test-result.test-fail > span.test-status {
+  @apply text-[#ff4b4b];
+}
+
+.test-result.test-selected {
+  @apply bg-[#2e3d2e] border-l-4 border-[#69d483];
+}
+
+.test-result.test-selected .test-description {
+  @apply text-[#c6ffd4];
+}
+
+.row {
+  @apply grid gap-3 grid-cols-2;
+}
+
+.challenge-row {
+  @apply flex flex-col gap-4 mb-6;
+}
+
+.output-panel {
+  @apply col gap-3;
+
+  pre {
+    @apply p-2.5 min-h-[52px];
+  }
+}
+

@@ -1,0 +1,14 @@
+.tags-container {
+  @apply flex flex-wrap gap-2 my-2;
+}
+
+.tag {
+  @apply inline-block px-3 py-1 bg-[#2d4a3e] text-[#92eea8] rounded-2xl text-lg border border-[#3d5a4e] cursor-pointer transition-all duration-200;
+  box-shadow: 0 0 4px rgba(105, 212, 131, 0.2);
+}
+
+.tag:hover {
+  @apply bg-[#3d5a4e] -translate-y-0.5 border-[#4d6a5e];
+  box-shadow: 0 0 8px rgba(105, 212, 131, 0.4);
+}
+

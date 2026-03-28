@@ -1,0 +1,47 @@
+* {
+  font-family: "VT323", monospace;
+}
+
+body {
+  @apply m-5 bg-[#161716] text-white;
+}
+
+h1 {
+  @apply text-5xl mb-5;
+}
+
+h3 {
+  @apply text-3xl my-2;
+}
+
+label {
+  @apply block text-3xl;
+}
+
+textarea,
+input,
+select {
+  @apply w-full;
+}
+
+textarea:focus {
+  @apply outline-none;
+}
+
+#test-results,
+pre {
+  @apply text-2xl bg-[#272827] m-0 text-[#eee] p-2.5 overflow-auto min-h-[30px];
+}
+
+button {
+  @apply px-3 py-2 bg-[#272827] text-white;
+}
+
+select {
+  @apply h-10 bg-[#272827] text-white text-2xl px-2 py-1;
+}
+
+@utility col {
+  @apply flex flex-col;
+}
+

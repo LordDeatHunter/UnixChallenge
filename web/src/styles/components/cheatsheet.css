@@ -1,0 +1,80 @@
+/* CheatSheet Styles */
+.cheatsheet-container {
+  @apply flex flex-col gap-3;
+}
+
+.cheatsheet-search {
+  @apply flex gap-2;
+}
+
+.cheatsheet-input {
+  @apply flex-1 h-10 bg-[#272827] text-white text-xl px-3 py-2 border border-[#3d5a4e] rounded transition-all duration-200;
+}
+
+.cheatsheet-input:focus {
+  @apply outline-none border-[#92eea8];
+  box-shadow: 0 0 6px rgba(105, 212, 131, 0.3);
+}
+
+.cheatsheet-button {
+  @apply px-4 py-2 bg-[#2d4a3e] text-[#92eea8] rounded border border-[#3d5a4e] transition-all duration-200 cursor-pointer text-xl;
+}
+
+.cheatsheet-button:hover:not(:disabled) {
+  @apply bg-[#3d5a4e] border-[#92eea8];
+  box-shadow: 0 0 6px rgba(105, 212, 131, 0.3);
+}
+
+.cheatsheet-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.cheatsheet-content {
+  @apply text-base bg-[#272827] text-[#eee] p-3 overflow-auto max-h-[600px] rounded border border-[#3d5a4e];
+  font-family: "VT323", monospace;
+  line-height: 1.4;
+}
+
+.cheatsheet-header {
+  @apply text-2xl font-bold text-[#92eea8];
+  display: block;
+}
+
+.cheatsheet-error {
+  @apply text-xl text-[#ff4b4b] p-2 bg-[#3d2727] rounded border border-[#5d3737];
+}
+
+.cheatsheet-placeholder {
+  @apply text-xl text-[#888] p-6 text-center bg-[#272827] rounded border border-[#3d5a4e];
+}
+
+.cheatsheet-placeholder p {
+  @apply my-2;
+}
+
+.cheatsheet-examples {
+  @apply text-lg mt-3;
+}
+
+.cheatsheet-examples span {
+  @apply inline-block mx-1 px-2 py-1 bg-[#2d4a3e] text-[#92eea8] rounded cursor-pointer border border-[#3d5a4e] transition-all duration-200;
+}
+
+.cheatsheet-examples span:hover {
+  @apply bg-[#3d5a4e] border-[#92eea8];
+  box-shadow: 0 0 4px rgba(105, 212, 131, 0.3);
+}
+
+/* ANSI formatting classes for cheat.sh output */
+.ansi-bold {
+  font-weight: bold;
+}
+
+.ansi-underline {
+  text-decoration: underline;
+}
+
+.ansi-italic {
+  font-style: italic;
+}
+

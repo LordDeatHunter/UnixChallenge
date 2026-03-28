@@ -1,0 +1,84 @@
+.input-div {
+  @apply w-full h-[120px];
+}
+
+.command-input {
+  @apply flex flex-col gap-3;
+}
+
+.input-div textarea {
+  @apply text-3xl h-full border-none p-2.5 box-border resize-none;
+  background-color: #172620;
+  color: #92eea8;
+  box-shadow:
+    0 0 2px #69d483,
+    0 0 4px #69d483,
+    0 0 16px #69d48366;
+  text-shadow:
+    0 0 2px #69d483,
+    0 0 6px #69d483,
+    0 0 10px #69d483;
+}
+
+.input-div textarea::placeholder {
+  color: #489a5c;
+  text-shadow:
+    0 0 2px #69d48366,
+    0 0 6px #69d48366,
+    0 0 10px #69d48366;
+}
+
+.input-div div {
+  @apply relative pointer-events-none w-full h-full z-10 -top-[120px];
+}
+
+.command-submit-button {
+  @apply self-start px-4 py-2 bg-[#2d4a3e] text-[#92eea8] rounded border border-[#3d5a4e] transition-all duration-200 cursor-pointer text-2xl;
+}
+
+.command-submit-button:hover {
+  @apply bg-[#3d5a4e] border-[#92eea8];
+  box-shadow: 0 0 6px rgba(105, 212, 131, 0.3);
+}
+
+.command-submit-button:focus-visible {
+  @apply outline-none border-[#92eea8];
+  box-shadow: 0 0 6px rgba(105, 212, 131, 0.3);
+}
+
+.command-submit-button:disabled {
+  @apply bg-[#243229] text-[#6d8f77] border-[#2f4639] cursor-not-allowed opacity-80;
+  box-shadow: none;
+}
+
+.scanlines {
+  @apply relative w-full h-full z-20;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(128, 128, 128, 0.2) 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  background-size: 100% 8px;
+  animation: move-scanlines 10s ease infinite;
+}
+
+@keyframes move-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+@media (max-width: 1279px) {
+  .input-div {
+    @apply h-[112px];
+  }
+
+  .input-div div {
+    @apply -top-[112px];
+  }
+}
+
