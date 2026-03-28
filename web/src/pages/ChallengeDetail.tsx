@@ -118,9 +118,14 @@ const ChallengeDetail: Component = () => {
     void fetchUserChallengeHistory(challengeId);
   });
 
+  createEffect(() => {
+    const challengeTitle = selectedChallenge()?.title;
+    document.title = challengeTitle ?? "Unix Challenge";
+  });
+
   return (
     <>
-      <SiteHeader title={selectedChallenge()?.title || "Challenge"} />
+      <SiteHeader />
 
       <div class="challenge-detail-page">
         <Show
@@ -135,7 +140,7 @@ const ChallengeDetail: Component = () => {
         {(challenge) => (
           <div class="challenge-detail-layout">
             <section class="challenge-panel challenge-description-panel">
-              <h3>Overview</h3>
+              <h3>{challenge().title}</h3>
               <TagsDisplay tags={challenge().tags} />
 
               <pre id="challenge-description">{challenge().description}</pre>

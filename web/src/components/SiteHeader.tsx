@@ -4,7 +4,6 @@ import { A } from "@solidjs/router";
 import { API_URL, currentUser, isLoadingUser, logout } from "@/store";
 
 interface SiteHeaderProps {
-  title: string;
   showChallengesLink?: boolean;
   isChallengesPage?: boolean;
 }
@@ -55,7 +54,7 @@ const SiteHeader: Component<SiteHeaderProps> = (props) => {
             />
           </span>
         </A>
-        <h1>{props.title}</h1>
+        <h1>Unix Challenge</h1>
       </div>
 
       <nav class="site-header-nav" aria-label="Primary navigation">

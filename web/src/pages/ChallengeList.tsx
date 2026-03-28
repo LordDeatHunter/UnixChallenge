@@ -13,14 +13,12 @@ import TagsDisplay from "@/components/TagsDisplay";
 const ChallengeList: Component = () => {
   onMount(() => {
     void loadChallenges();
+    document.title = "Unix Challenge";
   });
 
   return (
     <>
-      <SiteHeader
-        title="Unix Challenge (name subject to change)"
-        isChallengesPage
-      />
+      <SiteHeader isChallengesPage />
 
       <div class="challenge-list-container">
         <div class="search-section">
