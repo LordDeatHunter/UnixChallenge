@@ -12,3 +12,12 @@
   box-shadow: 0 0 8px rgba(105, 212, 131, 0.4);
 }
 
+.tag-clickable {
+  @apply cursor-pointer;
+}
+
+.tag-clickable:hover {
+  @apply bg-[#3d5a4e] -translate-y-0.5 border-[#92eea8];
+  box-shadow: 0 0 8px rgba(105, 212, 131, 0.5);
+}
+
