@@ -554,6 +554,31 @@ select {
   @apply max-h-[420px];
 }
 
+.challenge-login-panel {
+  @apply flex flex-col gap-3;
+}
+
+.challenge-login-panel h3 {
+  @apply mt-0 mb-0;
+}
+
+.challenge-login-panel p {
+  @apply m-0 text-xl text-[#a8d7b5];
+}
+
+.challenge-login-link {
+  @apply inline-flex items-center justify-center self-start h-10 px-4 text-xl leading-none border border-[#3d5a4e] rounded bg-[#2d4a3e] text-[#92eea8] no-underline transition-all duration-200;
+}
+
+.challenge-login-link:hover {
+  @apply border-[#92eea8] bg-[#3d5a4e] text-[#c8ffd5];
+}
+
+.challenge-login-link:focus-visible {
+  @apply outline-none border-[#92eea8];
+  box-shadow: 0 0 0 2px rgba(146, 238, 168, 0.22);
+}
+
 @media (max-width: 1279px) {
   .input-div {
     @apply h-[112px];

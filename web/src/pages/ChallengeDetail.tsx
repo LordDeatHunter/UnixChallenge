@@ -10,6 +10,7 @@ import { useParams } from "@solidjs/router";
 import TagsDisplay from "@/components/TagsDisplay";
 import CommandInput from "@/components/CommandInput";
 import {
+  API_URL,
   challenges,
   cmd,
   currentUser,
@@ -184,53 +185,64 @@ const ChallengeDetail: Component = () => {
               <pre id="challenge-description">{challenge().description}</pre>
             </section>
 
-            <section class="challenge-panel challenge-command-panel">
-              <label>Command</label>
-              <p class="command-help">
-                Press Enter to submit. Use Shift+Enter for a newline.
-              </p>
-              <CommandInput
-                value={cmd()}
-                onInput={setCmd}
-                onSubmit={() => void runSubmission()}
-                isSubmitting={isRunning()}
-              />
-            </section>
+            <Show
+              when={currentUser()}
+              fallback={
+                <section class="challenge-panel challenge-login-panel">
+                  <h3>Login Required</h3>
+                  <p>Log in to run commands, view results, and access the cheat sheet.</p>
+                  <a href={`${API_URL}/auth/github`} class="challenge-login-link">
+                    Login with GitHub
+                  </a>
+                </section>
+              }
+            >
+              <section class="challenge-panel challenge-command-panel">
+                <label>Command</label>
+                <p class="command-help">
+                  Press Enter to submit. Use Shift+Enter for a newline.
+                </p>
+                <CommandInput
+                  value={cmd()}
+                  onInput={setCmd}
+                  onSubmit={() => void runSubmission()}
+                  isSubmitting={isRunning()}
+                />
+              </section>
 
-            <section class="challenge-panel challenge-results-panel">
-              <div class="challenge-results-header">
-                <h3>
-                  Execution Results
-                  <span class="results-summary">{passSummary()}</span>
-                </h3>
-                <div class="results-test-picker">
-                  <label for="selected-test">Test</label>
-                  <select
-                    id="selected-test"
-                    class={selectedTestStatusClass()}
-                    value={selectedTest()?.test_num || ""}
-                    onChange={(e) => handleSelectedTestChange(e.currentTarget.value)}
-                    disabled={isRunning() || testResults().length === 0}
-                  >
-                    <option value="" disabled={testResults().length > 0}>
-                      {isRunning()
-                        ? "Waiting for results..."
-                        : testResults().length > 0
-                          ? "Select test"
-                          : "No tests available"}
-                    </option>
-                    <For each={testResults()}>
-                      {(test, index) => (
-                        <option value={test.test_num}>
-                          {test.pass ? "[PASS]" : "[FAIL]"} Test {index() + 1}
-                        </option>
-                      )}
-                    </For>
-                  </select>
+              <section class="challenge-panel challenge-results-panel">
+                <div class="challenge-results-header">
+                  <h3>
+                    Execution Results
+                    <span class="results-summary">{passSummary()}</span>
+                  </h3>
+                  <div class="results-test-picker">
+                    <label for="selected-test">Test</label>
+                    <select
+                      id="selected-test"
+                      class={selectedTestStatusClass()}
+                      value={selectedTest()?.test_num || ""}
+                      onChange={(e) => handleSelectedTestChange(e.currentTarget.value)}
+                      disabled={isRunning() || testResults().length === 0}
+                    >
+                      <option value="" disabled={testResults().length > 0}>
+                        {isRunning()
+                          ? "Waiting for results..."
+                          : testResults().length > 0
+                            ? "Select test"
+                            : "No tests available"}
+                      </option>
+                      <For each={testResults()}>
+                        {(test, index) => (
+                          <option value={test.test_num}>
+                            {test.pass ? "[PASS]" : "[FAIL]"} Test {index() + 1}
+                          </option>
+                        )}
+                      </For>
+                    </select>
+                  </div>
                 </div>
-              </div>
 
-              <Show when={currentUser()}>
                 <details class="challenge-results-history">
                   <summary class="challenge-results-history-summary">
                     My Previous Submissions
@@ -285,44 +297,44 @@ const ChallengeDetail: Component = () => {
                     </Show>
                   </div>
                 </details>
-              </Show>
 
-              <div class="challenge-results-content">
-                <Show
-                  when={selectedTest()}
-                  fallback={<pre>Select a test to inspect outputs.</pre>}
-                >
-                  {(test) => (
-                    <table class="result-output-table">
-                      <tbody>
-                        <tr>
-                          <th scope="row">Expected</th>
-                          <td>
-                            <pre>{test().expected || ""}</pre>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th scope="row">Stdout</th>
-                          <td>
-                            <pre>{test().stdout || ""}</pre>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th scope="row">Stderr</th>
-                          <td>
-                            <pre>{test().stderr || ""}</pre>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  )}
-                </Show>
-              </div>
-            </section>
+                <div class="challenge-results-content">
+                  <Show
+                    when={selectedTest()}
+                    fallback={<pre>Select a test to inspect outputs.</pre>}
+                  >
+                    {(test) => (
+                      <table class="result-output-table">
+                        <tbody>
+                          <tr>
+                            <th scope="row">Expected</th>
+                            <td>
+                              <pre>{test().expected || ""}</pre>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">Stdout</th>
+                            <td>
+                              <pre>{test().stdout || ""}</pre>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">Stderr</th>
+                            <td>
+                              <pre>{test().stderr || ""}</pre>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    )}
+                  </Show>
+                </div>
+              </section>
 
-            <section class="challenge-panel challenge-docs-panel">
-              <CheatSheet />
-            </section>
+              <section class="challenge-panel challenge-docs-panel">
+                <CheatSheet />
+              </section>
+            </Show>
           </div>
         )}
         </Show>
