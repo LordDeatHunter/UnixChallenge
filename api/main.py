@@ -1,16 +1,17 @@
-from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from pydantic import BaseModel
-from fastapi import FastAPI, Depends, Response
-import urllib.request
-import urllib.error
 import logging
-import uvicorn
 import pathlib
-import httpx
-import yaml
 import sys
+import urllib.error
+import urllib.request
+from contextlib import asynccontextmanager
+
+import httpx
+import uvicorn
+import yaml
+from fastapi import FastAPI, Depends, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
+from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
@@ -22,11 +23,8 @@ from api.auth import create_access_token, get_current_user, require_current_user
 from worker.run import judge
 from database.db import (
     close_pool,
-    get_submission_by_id,
     get_user_submission_by_id,
     get_user_challenge_progress,
-    get_submissions_by_challenge,
-    get_recent_submissions,
     get_challenge_stats,
     update_user_username,
     get_user_submissions,
@@ -226,10 +224,10 @@ async def me_submission_by_id(submission_id: str, user=Depends(require_current_u
 
 @app.get("/me/challenges/{challenge_id}/submissions")
 async def me_challenge_submissions(
-    challenge_id: str,
-    limit: int = 50,
-    offset: int = 0,
-    user=Depends(require_current_user),
+        challenge_id: str,
+        limit: int = 50,
+        offset: int = 0,
+        user=Depends(require_current_user),
 ):
     try:
         submissions = await get_user_challenge_submissions(
@@ -239,6 +237,7 @@ async def me_challenge_submissions(
     except Exception as e:
         logger.error(f"Error fetching user challenge submissions: {e}")
         return JSONResponse({"error": "Failed to fetch submissions"}, status_code=500)
+
 
 @app.get("/challenges")
 async def challenges(user=Depends(get_current_user)):
@@ -269,6 +268,7 @@ async def challenges(user=Depends(get_current_user)):
         })
 
     return out
+
 
 @app.post("/submit")
 async def submit(req: SubmitReq, user=Depends(require_current_user)):
@@ -327,6 +327,7 @@ async def submit(req: SubmitReq, user=Depends(require_current_user)):
             {"error": f"Internal server error"}, status_code=500
         )
 
+
 @app.get("/cheatsheet/{query:path}")
 def cheatsheet(query: str):
     try:
@@ -365,9 +366,9 @@ def cheatsheet(query: str):
 
 
 @app.get("/submissions/{submission_id}")
-async def get_submission(submission_id: str):
+async def get_submission(submission_id: str, user=Depends(require_current_user)):
     try:
-        submission = await get_submission_by_id(submission_id)
+        submission = await get_user_submission_by_id(user["id"], submission_id)
         if submission is None:
             return JSONResponse(
                 {"error": "Submission not found"}, status_code=404
@@ -381,9 +382,10 @@ async def get_submission(submission_id: str):
 
 
 @app.get("/challenges/{challenge_id}/submissions")
-async def get_challenge_submissions(challenge_id: str, limit: int = 100, offset: int = 0):
+async def get_challenge_submissions(challenge_id: str, limit: int = 100, offset: int = 0,
+                                    user=Depends(require_current_user)):
     try:
-        submissions = await get_submissions_by_challenge(challenge_id, limit, offset)
+        submissions = await get_user_challenge_submissions(user["id"], challenge_id, limit, offset)
         return JSONResponse({"submissions": submissions})
     except Exception as e:
         logger.error(f"Error fetching submissions: {str(e)}")
@@ -405,9 +407,9 @@ async def get_challenge_statistics(challenge_id: str):
 
 
 @app.get("/submissions")
-async def get_submissions(limit: int = 50):
+async def get_submissions(limit: int = 50, user=Depends(require_current_user)):
     try:
-        submissions = await get_recent_submissions(limit)
+        submissions = await get_user_submissions(user["id"], limit, 0)
         return JSONResponse({"submissions": submissions})
     except Exception as e:
         logger.error(f"Error fetching recent submissions: {str(e)}")

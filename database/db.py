@@ -1,8 +1,9 @@
-from typing import Optional, List, Dict, Any
-import asyncpg
 import logging
-import uuid
 import os
+import uuid
+from typing import Optional, List, Dict, Any
+
+import asyncpg
 
 logger = logging.getLogger("uvicorn")
 
@@ -28,10 +29,10 @@ async def close_pool():
 
 
 async def upsert_user(
-    github_user_id: int,
-    login: str,
-    email: str,
-    avatar_url: str,
+        github_user_id: int,
+        login: str,
+        email: str,
+        avatar_url: str,
 ) -> Dict[str, Any]:
     pool = await get_pool()
 
@@ -71,7 +72,7 @@ async def upsert_user(
             username = base_username
             suffix = 1
             while await conn.fetchval(
-                "SELECT 1 FROM users WHERE username = $1", username
+                    "SELECT 1 FROM users WHERE username = $1", username
             ):
                 username = f"{base_username}_{suffix}"
                 suffix += 1
@@ -152,10 +153,10 @@ async def update_user_username(user_id: str, new_username: str) -> Optional[Dict
 
 
 async def save_submission(
-    challenge_id: str,
-    command: str,
-    results: List[Dict[str, Any]],
-    user_id: Optional[str] = None,
+        challenge_id: str,
+        command: str,
+        results: List[Dict[str, Any]],
+        user_id: Optional[str] = None,
 ) -> str:
     pool = await get_pool()
     uid = uuid.UUID(user_id) if user_id else None
@@ -195,128 +196,6 @@ async def save_submission(
             return str(submission_id)
 
 
-async def get_submission_by_id(submission_id: str) -> Optional[Dict[str, Any]]:
-    pool = await get_pool()
-
-    async with pool.acquire() as conn:
-        submission = await conn.fetchrow(
-            """
-            SELECT id, challenge_id, command, created_at
-            FROM submissions
-            WHERE id = $1
-            """,
-            submission_id
-        )
-
-        if not submission:
-            return None
-
-        test_results = await conn.fetch(
-            """
-            SELECT test_num, exit_code, elapsed_ms, passed, stdout, stderr
-            FROM test_results
-            WHERE submission_id = $1
-            ORDER BY test_num
-            """,
-            submission["id"]
-        )
-
-        total_tests = len(test_results)
-        passed_tests = sum(1 for r in test_results if r["passed"])
-        failed_tests = total_tests - passed_tests
-        execution_time_ms = sum(r["elapsed_ms"] for r in test_results)
-
-        return {
-            "id": str(submission["id"]),
-            "challenge_id": submission["challenge_id"],
-            "command": submission["command"],
-            "created_at": submission["created_at"].isoformat(),
-            "total_tests": total_tests,
-            "passed": passed_tests,
-            "failed": failed_tests,
-            "all_pass": failed_tests == 0,
-            "execution_time_ms": execution_time_ms,
-            "results": [
-                {
-                    "test_num": r["test_num"],
-                    "exit_code": r["exit_code"],
-                    "elapsed_ms": r["elapsed_ms"],
-                    "pass": r["passed"],
-                    "stdout": r["stdout"],
-                    "stderr": r["stderr"],
-                }
-                for r in test_results
-            ]
-        }
-
-
-async def get_submissions_by_challenge(
-    challenge_id: str,
-    limit: int = 100,
-    offset: int = 0
-) -> List[Dict[str, Any]]:
-    pool = await get_pool()
-
-    async with pool.acquire() as conn:
-        submissions = await conn.fetch(
-            """
-            SELECT *
-            FROM submission_summary
-            WHERE challenge_id = $1
-            ORDER BY created_at DESC
-            LIMIT $2 OFFSET $3
-            """,
-            challenge_id,
-            limit,
-            offset
-        )
-
-        return [
-            {
-                "id": str(s["id"]),
-                "challenge_id": s["challenge_id"],
-                "command": s["command"],
-                "created_at": s["created_at"].isoformat(),
-                "total_tests": s["total_tests"],
-                "passed": s["passed_tests"],
-                "failed": s["failed_tests"],
-                "all_pass": s["all_passed"],
-                "execution_time_ms": s["execution_time_ms"]
-            }
-            for s in submissions
-        ]
-
-
-async def get_recent_submissions(limit: int = 50) -> List[Dict[str, Any]]:
-    pool = await get_pool()
-
-    async with pool.acquire() as conn:
-        submissions = await conn.fetch(
-            """
-            SELECT *
-            FROM submission_summary
-            ORDER BY created_at DESC
-            LIMIT $1
-            """,
-            limit
-        )
-
-        return [
-            {
-                "id": str(s["id"]),
-                "challenge_id": s["challenge_id"],
-                "command": s["command"],
-                "created_at": s["created_at"].isoformat(),
-                "total_tests": s["total_tests"],
-                "passed": s["passed_tests"],
-                "failed": s["failed_tests"],
-                "all_pass": s["all_passed"],
-                "execution_time_ms": s["execution_time_ms"]
-            }
-            for s in submissions
-        ]
-
-
 async def get_challenge_stats(challenge_id: str) -> Dict[str, Any]:
     pool = await get_pool()
 
@@ -353,9 +232,9 @@ async def get_challenge_stats(challenge_id: str) -> Dict[str, Any]:
 
 
 async def get_user_submissions(
-    user_id: str,
-    limit: int = 50,
-    offset: int = 0,
+        user_id: str,
+        limit: int = 50,
+        offset: int = 0,
 ) -> List[Dict[str, Any]]:
     pool = await get_pool()
 
@@ -390,10 +269,10 @@ async def get_user_submissions(
 
 
 async def get_user_challenge_submissions(
-    user_id: str,
-    challenge_id: str,
-    limit: int = 50,
-    offset: int = 0,
+        user_id: str,
+        challenge_id: str,
+        limit: int = 50,
+        offset: int = 0,
 ) -> List[Dict[str, Any]]:
     pool = await get_pool()
 
@@ -429,8 +308,8 @@ async def get_user_challenge_submissions(
 
 
 async def get_user_submission_by_id(
-    user_id: str,
-    submission_id: str,
+        user_id: str,
+        submission_id: str,
 ) -> Optional[Dict[str, Any]]:
     pool = await get_pool()
 
@@ -526,9 +405,9 @@ async def get_user_challenge_progress(user_id: str) -> Dict[str, str]:
 
 
 async def get_duplicate_submission(
-    user_id: str,
-    challenge_id: str,
-    command: str,
+        user_id: str,
+        challenge_id: str,
+        command: str,
 ) -> Optional[str]:
     pool = await get_pool()
 
