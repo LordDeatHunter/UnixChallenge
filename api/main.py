@@ -24,11 +24,10 @@ from database.db import (
     close_pool,
     get_submission_by_id,
     get_user_submission_by_id,
-    get_user_completed_challenge_ids,
+    get_user_challenge_progress,
     get_submissions_by_challenge,
     get_recent_submissions,
     get_challenge_stats,
-    get_user_by_id,
     update_user_username,
     get_user_submissions,
     get_user_challenge_submissions,
@@ -243,10 +242,10 @@ async def me_challenge_submissions(
 @app.get("/challenges")
 async def challenges(user=Depends(get_current_user)):
     out = []
-    completed_ids = set()
+    progress_by_challenge = {}
 
     if user is not None:
-        completed_ids = set(await get_user_completed_challenge_ids(user["id"]))
+        progress_by_challenge = await get_user_challenge_progress(user["id"])
 
     chal_dir = ROOT / "challenges"
     for d in chal_dir.iterdir():
@@ -265,7 +264,7 @@ async def challenges(user=Depends(get_current_user)):
             "title": title or d.name,
             "description": description,
             "tags": tags,
-            "completed": d.name in completed_ids,
+            "progress_state": progress_by_challenge.get(d.name, "untouched"),
         })
 
     return out

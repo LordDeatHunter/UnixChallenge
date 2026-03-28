@@ -10,6 +10,30 @@ import {
 } from "@/store";
 import TagsDisplay from "@/components/TagsDisplay";
 
+const getChallengeState = (state?: string) => {
+  if (state === "completed") {
+    return {
+      label: "Completed",
+      className: "challenge-state-completed",
+      showChip: true,
+    };
+  }
+
+  if (state === "attempted") {
+    return {
+      label: "Attempted",
+      className: "challenge-state-attempted",
+      showChip: true,
+    };
+  }
+
+  return {
+    label: "Untouched",
+    className: "challenge-state-untouched",
+    showChip: false,
+  };
+};
+
 const ChallengeList: Component = () => {
   onMount(() => {
     void loadChallenges();
@@ -35,18 +59,27 @@ const ChallengeList: Component = () => {
 
         <div class="challenges-grid">
           <For each={filteredChallenges()}>
-            {(challenge) => (
-              <A href={`/challenge/${challenge.id}`} class="challenge-card">
-                <div class="challenge-card-header">
-                  <h3>{challenge.title}</h3>
-                  {challenge.completed && (
-                    <span class="challenge-complete-badge">Complete</span>
-                  )}
-                </div>
-                <TagsDisplay tags={challenge.tags} />
-                <p class="challenge-preview">{challenge.description}</p>
-              </A>
-            )}
+            {(challenge) => {
+              const challengeState = getChallengeState(challenge.progress_state);
+
+              return (
+                <A
+                  href={`/challenge/${challenge.id}`}
+                  class={`challenge-card ${challengeState.className}`}
+                >
+                  <div class="challenge-card-header">
+                    <h3>{challenge.title}</h3>
+                    {challengeState.showChip && (
+                      <span class={`challenge-state-chip ${challengeState.className}`}>
+                        {challengeState.label}
+                      </span>
+                    )}
+                  </div>
+                  <TagsDisplay tags={challenge.tags} />
+                  <p class="challenge-preview">{challenge.description}</p>
+                </A>
+              );
+            }}
           </For>
         </div>
 

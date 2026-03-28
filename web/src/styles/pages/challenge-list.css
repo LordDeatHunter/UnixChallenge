@@ -24,8 +24,14 @@
 }
 
 .challenge-card {
-  @apply block p-6 bg-[#272827] rounded-lg border-2 border-[#3d5a4e] transition-all duration-200 no-underline text-white cursor-pointer;
+  @apply relative block p-6 bg-[#272827] rounded-lg border-2 border-[#3d5a4e] transition-all duration-200 no-underline text-white cursor-pointer overflow-hidden;
   box-shadow: 0 0 4px rgba(105, 212, 131, 0.1);
+}
+
+.challenge-card::before {
+  content: "";
+  @apply absolute left-0 top-0 h-full w-1;
+  background: #3d5a4e;
 }
 
 .challenge-card:hover {
@@ -54,8 +60,32 @@
   @apply mb-0;
 }
 
-.challenge-complete-badge {
-  @apply inline-flex items-center justify-center px-2.5 py-1 text-lg rounded-full border border-[#69d483] text-[#9cf0b0] bg-[#26392d] shrink-0;
+.challenge-state-chip {
+  @apply inline-flex items-center justify-center px-2.5 py-1 text-lg rounded-full border shrink-0 font-medium;
+}
+
+.challenge-state-untouched::before {
+  background: #6f7c74;
+}
+
+.challenge-state-attempted::before {
+  background: #f3b25b;
+}
+
+.challenge-state-completed::before {
+  background: #69d483;
+}
+
+.challenge-state-chip.challenge-state-untouched {
+  @apply border-[#5a665f] text-[#d0d8d3] bg-[#2c3130];
+}
+
+.challenge-state-chip.challenge-state-attempted {
+  @apply border-[#7d633d] text-[#ffda9f] bg-[#3a2f21];
+}
+
+.challenge-state-chip.challenge-state-completed {
+  @apply border-[#69d483] text-[#b8f8c8] bg-[#26392d];
   box-shadow: 0 0 6px rgba(105, 212, 131, 0.25);
 }
 

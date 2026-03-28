@@ -10,7 +10,7 @@ export interface Challenge {
   title: string;
   description: string;
   tags: string[];
-  completed?: boolean;
+  progress_state?: "untouched" | "attempted" | "completed";
 }
 
 export interface TestResult {

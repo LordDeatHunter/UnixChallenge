@@ -502,3 +502,25 @@ async def get_user_completed_challenge_ids(user_id: str) -> List[str]:
         )
 
     return [row["challenge_id"] for row in rows]
+
+
+async def get_user_challenge_progress(user_id: str) -> Dict[str, str]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT challenge_id, BOOL_OR(all_passed) AS is_completed
+            FROM submission_summary
+            WHERE user_id = $1
+            GROUP BY challenge_id
+            """,
+            uuid.UUID(user_id),
+        )
+
+    progress: Dict[str, str] = {}
+    for row in rows:
+        progress[row["challenge_id"]] = "completed" if row["is_completed"] else "attempted"
+
+    return progress
+
