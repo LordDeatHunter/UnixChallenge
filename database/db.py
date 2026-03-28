@@ -524,3 +524,27 @@ async def get_user_challenge_progress(user_id: str) -> Dict[str, str]:
 
     return progress
 
+
+async def get_duplicate_submission(
+    user_id: str,
+    challenge_id: str,
+    command: str,
+) -> Optional[str]:
+    pool = await get_pool()
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT id
+            FROM submissions
+            WHERE user_id = $1
+              AND challenge_id = $2
+              AND command = $3
+            LIMIT 1
+            """,
+            uuid.UUID(user_id),
+            challenge_id,
+            command,
+        )
+
+    return str(row["id"]) if row else None

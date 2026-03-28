@@ -31,6 +31,7 @@ from database.db import (
     update_user_username,
     get_user_submissions,
     get_user_challenge_submissions,
+    get_duplicate_submission,
     upsert_user,
 )
 
@@ -270,7 +271,7 @@ async def challenges(user=Depends(get_current_user)):
     return out
 
 @app.post("/submit")
-async def submit(req: SubmitReq, user=Depends(get_current_user)):
+async def submit(req: SubmitReq, user=Depends(require_current_user)):
     if not req.challenge_id or not req.challenge_id.replace('-', '').replace('_', '').isalnum():
         return JSONResponse(
             {"error": "Invalid challenge ID"}, status_code=400
@@ -292,7 +293,25 @@ async def submit(req: SubmitReq, user=Depends(get_current_user)):
         )
 
     try:
-        summary = await judge(str(chal_path), req.cmd, user_id=user["id"] if user else None)
+        # Check for duplicate submission
+        duplicate_id = await get_duplicate_submission(user["id"], req.challenge_id, req.cmd)
+        if duplicate_id:
+            # Return cached results from the earlier submission
+            submission = await get_user_submission_by_id(user["id"], duplicate_id)
+            if submission:
+                return JSONResponse({
+                    "summary": {
+                        "run_id": submission["id"],
+                        "total_tests": submission["total_tests"],
+                        "passed": submission["passed"],
+                        "failed": submission["failed"],
+                        "all_pass": submission["all_pass"],
+                        "results": submission["results"],
+                    },
+                    "cached": True,
+                })
+
+        summary = await judge(str(chal_path), req.cmd, user_id=user["id"])
 
         if summary and "error" in summary:
             return JSONResponse(
