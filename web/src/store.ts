@@ -201,6 +201,7 @@ export const loadHistoricalSubmission = async (submissionId: string) => {
 
     const data = await res.json() as {
       id: string;
+      command: string;
       results: Array<{
         test_num: string;
         exit_code: number;
@@ -215,6 +216,7 @@ export const loadHistoricalSubmission = async (submissionId: string) => {
       all_pass: boolean;
     };
 
+    setCmd(data.command);
     setSubmission({
       summary: {
         run_id: data.id,
