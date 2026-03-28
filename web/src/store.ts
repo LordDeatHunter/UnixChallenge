@@ -27,6 +27,28 @@ export const [isLoadingUser, setIsLoadingUser] = createSignal(true);
 export const [userChallengeHistory, setUserChallengeHistory] = createSignal<SubmissionSummary[]>([]);
 export const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
 
+export const loadLastSubmittedCmd = async (challengeId: string): Promise<string> => {
+  if (!challengeId || !currentUser()) {
+    return "";
+  }
+
+  try {
+    const res = await fetch(
+      `${API_URL}/me/challenges/${encodeURIComponent(challengeId)}/submissions?limit=1`,
+      { credentials: "include" },
+    );
+
+    if (!res.ok) {
+      return "";
+    }
+
+    const data = (await res.json()) as { submissions?: SubmissionSummary[] };
+    return data.submissions?.[0]?.command ?? "";
+  } catch {
+    return "";
+  }
+};
+
 export const selectedChallenge = () =>
   challenges().find((c) => c.id === selectedChallengeId());
 
@@ -54,7 +76,10 @@ export const loadChallenges = async () => {
 };
 
 export const runSubmission = async () => {
-  if (!selectedChallengeId() || !cmd()) return;
+  const challengeId = selectedChallengeId();
+  const command = cmd();
+
+  if (!challengeId || !command) return;
 
   setIsRunning(true);
   setSelectedTest(null);
@@ -66,8 +91,8 @@ export const runSubmission = async () => {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
-        challenge_id: selectedChallengeId(),
-        cmd: cmd(),
+        challenge_id: challengeId,
+        cmd: command,
       }),
     });
 
@@ -75,7 +100,7 @@ export const runSubmission = async () => {
     setSubmission(data);
 
     if (data.summary && currentUser()) {
-      void fetchUserChallengeHistory(selectedChallengeId());
+      void fetchUserChallengeHistory(challengeId);
     }
   } catch (error) {
     console.error("Submission failed:", error);

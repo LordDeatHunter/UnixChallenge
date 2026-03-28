@@ -16,6 +16,7 @@ import {
   fetchUserChallengeHistory,
   isLoadingHistory,
   isRunning,
+  loadLastSubmittedCmd,
   loadChallenges,
   loadHistoricalSubmission,
   runSubmission,
@@ -27,6 +28,7 @@ import {
   setSubmission,
   submission,
   userChallengeHistory,
+  setUserChallengeHistory,
 } from "@/store";
 import CheatSheet from "@/components/CheatSheet";
 import SiteHeader from "@/components/SiteHeader";
@@ -35,6 +37,10 @@ const ChallengeDetail: Component = () => {
   const params = useParams<{ id: string }>();
 
   const testResults = createMemo(() => submission()?.summary?.results ?? []);
+
+  const currentChallengeHistory = createMemo(() =>
+    userChallengeHistory().filter((h) => h.challenge_id === params.id),
+  );
 
   const passSummary = createMemo(() => {
     const summary = submission()?.summary;
@@ -97,10 +103,42 @@ const ChallengeDetail: Component = () => {
     if (challenges().length === 0) {
       void loadChallenges();
     }
+  });
 
-    setSelectedChallengeId(params.id);
+  createEffect(() => {
+    const challengeId = params.id;
+    const user = currentUser();
+
+    if (!challengeId) {
+      setSelectedChallengeId("");
+      setCmd("");
+      setSubmission(null);
+      setSelectedTest(null);
+      return;
+    }
+
+    setSelectedChallengeId(challengeId);
+    setCmd("");
     setSubmission(null);
     setSelectedTest(null);
+    setUserChallengeHistory([]);
+
+    if (!user) {
+      return;
+    }
+
+    // Ignore stale async results when route/user changes quickly.
+    let isCurrent = true;
+    void loadLastSubmittedCmd(challengeId).then((command) => {
+      if (!isCurrent || params.id !== challengeId) {
+        return;
+      }
+      setCmd(command);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
   });
 
   createEffect(() => {
@@ -196,8 +234,8 @@ const ChallengeDetail: Component = () => {
                 <details class="challenge-results-history">
                   <summary class="challenge-results-history-summary">
                     My Previous Submissions
-                    <Show when={userChallengeHistory().length > 0}>
-                      {" "}({userChallengeHistory().length})
+                    <Show when={currentChallengeHistory().length > 0}>
+                      {" "}({currentChallengeHistory().length})
                     </Show>
                   </summary>
 
@@ -206,11 +244,11 @@ const ChallengeDetail: Component = () => {
                       <p class="history-loading">Loading history...</p>
                     </Show>
 
-                    <Show when={!isLoadingHistory() && userChallengeHistory().length === 0}>
+                    <Show when={!isLoadingHistory() && currentChallengeHistory().length === 0}>
                       <p class="history-empty">No previous submissions for this challenge.</p>
                     </Show>
 
-                    <Show when={!isLoadingHistory() && userChallengeHistory().length > 0}>
+                    <Show when={!isLoadingHistory() && currentChallengeHistory().length > 0}>
                       <table class="history-table">
                         <thead>
                           <tr>
@@ -221,7 +259,7 @@ const ChallengeDetail: Component = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          <For each={userChallengeHistory()}>
+                          <For each={currentChallengeHistory()}>
                             {(entry) => (
                               <tr class={entry.all_pass ? "history-row-pass" : "history-row-fail"}>
                                 <td>{new Date(entry.created_at).toLocaleString()}</td>
