@@ -7,9 +7,11 @@ export const [userChallengeHistory, setUserChallengeHistory] =
   createSignal<SubmissionSummary[]>([]);
 export const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
 
-export const fetchUserChallengeHistory = async (challengeId: string) => {
+export const fetchUserChallengeHistory = async (
+  challengeId: string,
+): Promise<SubmissionSummary[]> => {
   if (!currentUser()) {
-    return;
+    return [];
   }
 
   setIsLoadingHistory(true);
@@ -19,9 +21,12 @@ export const fetchUserChallengeHistory = async (challengeId: string) => {
       { credentials: "include" },
     );
     const data = (await response.json()) as { submissions: SubmissionSummary[] };
-    setUserChallengeHistory(data.submissions ?? []);
+    const submissions = data.submissions ?? [];
+    setUserChallengeHistory(submissions);
+    return submissions;
   } catch {
     setUserChallengeHistory([]);
+    return [];
   } finally {
     setIsLoadingHistory(false);
   }

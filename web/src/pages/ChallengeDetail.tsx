@@ -18,7 +18,6 @@ import {
   fetchUserChallengeHistory,
   isLoadingHistory,
   isRunning,
-  loadLastSubmittedCmd,
   loadChallenges,
   loadHistoricalSubmission,
   runSubmission,
@@ -78,7 +77,7 @@ const ChallengeDetail: Component = () => {
     if (challenges().length === 0) void loadChallenges();
   });
 
-  // Reset state when route changes, load last command
+  // Reset state when route changes, then hydrate last command + results.
   createEffect(() => {
     const challengeId = params.id;
     const user = currentUser();
@@ -92,15 +91,22 @@ const ChallengeDetail: Component = () => {
     if (!challengeId || !user) return;
 
     let isCurrent = true;
-    void loadLastSubmittedCmd(challengeId).then((command) => {
-      if (isCurrent && params.id === challengeId) setCmd(command);
-    });
-    return () => { isCurrent = false; };
-  });
+    void (async () => {
+      const history = await fetchUserChallengeHistory(challengeId);
 
-  // Fetch history when user/challenge changes
-  createEffect(() => {
-    if (currentUser() && params.id) void fetchUserChallengeHistory(params.id);
+      if (!isCurrent || params.id !== challengeId || history.length === 0) {
+        return;
+      }
+
+      const latestSubmission = history.reduce((latest, entry) =>
+        new Date(entry.created_at) > new Date(latest.created_at) ? entry : latest,
+      );
+
+      setCmd(latestSubmission.command);
+      await loadHistoricalSubmission(latestSubmission.id);
+    })();
+
+    return () => { isCurrent = false; };
   });
 
   // Update page title
