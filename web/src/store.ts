@@ -4,6 +4,21 @@ import type { Challenge, Submission, SubmissionSummary, TestResult, User } from 
 export const API_URL: string =
   (import.meta.env.VITE_API_URL as string) || "/api";
 
+const KEYBOARD_SFX_STORAGE_KEY = "unixchallenge.keyboard-sfx-enabled";
+
+const getStoredKeyboardSoundsEnabled = () => {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  const storedValue = window.localStorage.getItem(KEYBOARD_SFX_STORAGE_KEY);
+  if (storedValue === null) {
+    return true;
+  }
+
+  return storedValue === "true";
+};
+
 export const [challenges, setChallenges] = createSignal<Challenge[]>([]);
 export const [selectedChallengeId, setSelectedChallengeId] =
   createSignal<string>("");
@@ -20,6 +35,16 @@ export const [cheatQuery, setCheatQuery] = createSignal<string>("");
 export const [cheatContent, setCheatContent] = createSignal<string>("");
 export const [isLoadingCheat, setIsLoadingCheat] = createSignal(false);
 export const [cheatError, setCheatError] = createSignal<string>("");
+export const [keyboardSoundsEnabled, setKeyboardSoundsEnabledSignal] =
+  createSignal<boolean>(getStoredKeyboardSoundsEnabled());
+
+export const setKeyboardSoundsEnabled = (enabled: boolean) => {
+  setKeyboardSoundsEnabledSignal(enabled);
+
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(KEYBOARD_SFX_STORAGE_KEY, String(enabled));
+  }
+};
 
 // Auth / user state
 export const [currentUser, setCurrentUser] = createSignal<User | null>(null);

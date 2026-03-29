@@ -1,7 +1,14 @@
 import type { Component } from "solid-js";
 import { Show, createSignal, onCleanup } from "solid-js";
 import { A } from "@solidjs/router";
-import { API_URL, currentUser, isLoadingUser, logout } from "@/store";
+import {
+  API_URL,
+  currentUser,
+  isLoadingUser,
+  keyboardSoundsEnabled,
+  logout,
+  setKeyboardSoundsEnabled,
+} from "@/store";
 
 interface SiteHeaderProps {
   showChallengesLink?: boolean;
@@ -111,6 +118,21 @@ const SiteHeader: Component<SiteHeaderProps> = (props) => {
                 <Show when={isUserMenuOpen()}>
                   <div class="site-header-user-dropdown" role="menu">
                     <p class="site-header-user-dropdown-name">{user().username}</p>
+                    <button
+                      type="button"
+                      class="site-header-user-dropdown-toggle"
+                      aria-pressed={keyboardSoundsEnabled()}
+                      onClick={() =>
+                        setKeyboardSoundsEnabled(!keyboardSoundsEnabled())
+                      }
+                    >
+                      <span class="site-header-user-dropdown-toggle-label">
+                        Keyboard SFX
+                      </span>
+                      <span class="site-header-user-dropdown-toggle-value">
+                        {keyboardSoundsEnabled() ? "On" : "Off"}
+                      </span>
+                    </button>
                     <button
                       type="button"
                       class="site-header-user-dropdown-logout"
