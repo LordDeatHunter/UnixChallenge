@@ -1,0 +1,63 @@
+.test-picker {
+  @apply relative min-w-[220px];
+}
+
+/* Trigger button */
+.test-picker-trigger {
+  @apply w-full h-10 text-xl px-3 text-left rounded bg-[#272827] cursor-pointer;
+  @apply flex items-center;
+  @apply border text-[#d7e7dc];
+}
+
+.test-picker-trigger:disabled {
+  @apply cursor-not-allowed opacity-70;
+}
+
+.test-picker-trigger.test-picker-neutral {
+  @apply border-[#3d5a4e];
+}
+
+.test-picker-trigger.test-picker-pass {
+  @apply border-[#69d483] text-[#9cf0b0];
+  box-shadow: 0 0 6px rgba(81, 172, 103, 0.25);
+}
+
+.test-picker-trigger.test-picker-fail {
+  @apply border-[#ff4b4b] text-[#ff9898];
+  box-shadow: 0 0 6px rgba(255, 75, 75, 0.22);
+}
+
+/* Dropdown menu */
+.test-picker-menu {
+  @apply absolute left-0 right-0 mt-1 p-1 z-20 list-none;
+  @apply bg-[#1f211f] border border-[#3d5a4e] rounded;
+}
+
+/* Option rows */
+.test-picker-option {
+  @apply px-3 py-1 text-xl rounded cursor-pointer;
+}
+
+.test-picker-option.test-picker-pass {
+  @apply text-[#9cf0b0];
+}
+
+.test-picker-option.test-picker-fail {
+  @apply text-[#ff9898];
+}
+
+.test-picker-option.test-picker-pass:hover {
+  @apply bg-[#2a3a31];
+}
+
+.test-picker-option.test-picker-fail:hover {
+  @apply bg-[#3a2a2a];
+}
+
+.test-picker-option.test-picker-selected.test-picker-pass {
+  @apply bg-[#2a3a31] border-l-2 border-l-[#69d483];
+}
+
+.test-picker-option.test-picker-selected.test-picker-fail {
+  @apply bg-[#3a2a2a] border-l-2 border-l-[#ff4b4b];
+}

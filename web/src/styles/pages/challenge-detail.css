@@ -61,24 +61,6 @@
   @apply text-xl;
 }
 
-.results-test-picker select {
-  @apply min-w-[220px] h-10 text-xl px-2;
-}
-
-.results-test-picker select.test-select-neutral {
-  @apply border-[#3d5a4e] text-[#d7e7dc];
-}
-
-.results-test-picker select.test-select-pass {
-  @apply border-[#69d483] text-[#9cf0b0];
-  box-shadow: 0 0 6px rgba(81, 172, 103, 0.25);
-}
-
-.results-test-picker select.test-select-fail {
-  @apply border-[#ff4b4b] text-[#ff9898];
-  box-shadow: 0 0 6px rgba(255, 75, 75, 0.22);
-}
-
 .challenge-results-content {
   @apply bg-[#1b1d1b] border border-[#304137] rounded-md p-3;
 }

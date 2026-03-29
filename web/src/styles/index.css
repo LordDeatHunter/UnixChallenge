@@ -7,5 +7,6 @@
 @import "./components/tags.css";
 @import "./components/legacy.css";
 @import "./components/cheatsheet.css";
+@import "./components/test-picker.css";
 @import "./pages/challenge-list.css";
 @import "./pages/challenge-detail.css";
