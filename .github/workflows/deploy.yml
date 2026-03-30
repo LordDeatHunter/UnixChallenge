@@ -23,7 +23,7 @@ jobs:
             git switch -f master &&
             git pull &&
             cd docker &&
-            docker compose -p unixchallenge -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+            docker compose --env-file ../.env -p unixchallenge -f docker-compose.yml -f docker-compose.prod.yml up -d --build
           "
 
       - name: cleanup
