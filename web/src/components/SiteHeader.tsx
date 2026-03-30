@@ -7,6 +7,7 @@ import {
   isLoadingUser,
   keyboardSoundsEnabled,
   logout,
+  startGithubLogin,
   setKeyboardSoundsEnabled,
 } from "@/store";
 
@@ -82,6 +83,10 @@ const SiteHeader: Component<SiteHeaderProps> = (props) => {
               <a
                 href={`${API_URL}/auth/github`}
                 class="site-header-link site-header-login"
+                onClick={(event) => {
+                  event.preventDefault();
+                  startGithubLogin();
+                }}
               >
                 Login with GitHub
               </a>

@@ -28,3 +28,9 @@ export const logout = async () => {
     setCurrentUser(null);
   }
 };
+
+export const startGithubLogin = () => {
+  // Avoid SPA route interception for same-origin /api auth start in production.
+  window.location.assign(`${API_URL}/auth/github`);
+};
+

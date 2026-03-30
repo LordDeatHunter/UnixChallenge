@@ -27,6 +27,7 @@ import {
   setSelectedChallengeId,
   setSelectedTest,
   setSubmission,
+  startGithubLogin,
   submission,
   userChallengeHistory,
   setUserChallengeHistory,
@@ -142,7 +143,14 @@ const ChallengeDetail: Component = () => {
                   <section class="challenge-panel challenge-login-panel">
                     <h3>Login Required</h3>
                     <p>Log in to run commands, view results, and access the cheat sheet.</p>
-                    <a href={`${API_URL}/auth/github`} class="challenge-login-link">
+                    <a
+                      href={`${API_URL}/auth/github`}
+                      class="challenge-login-link"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        startGithubLogin();
+                      }}
+                    >
                       Login with GitHub
                     </a>
                   </section>
